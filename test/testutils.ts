@@ -131,13 +131,16 @@ export function rethrow(): (e: Error) => void {
     }
 
     let message: string
+    let data = "0x"
     if (found != null) {
-      const data = found[1]
+      data = found[1]
       message = decodeRevertReason(data) ?? e.message + ' - ' + data.slice(0, 100)
     } else {
       message = e.message
     }
     const err = new Error(message)
+    // @ts-ignore
+    err.data = data;
     err.stack = 'Error: ' + message + '\n' + stack
     throw err
   }
@@ -166,28 +169,6 @@ export function decodeRevertReason(data: string, nullIfNoMatch = true): string |
 }
 
 let currentNode: string = ''
-
-// basic geth support
-// - by default, has a single account. our code needs more.
-export async function checkForGeth(): Promise<void> {
-  return;
-
-  // @ts-ignore
-  const provider = ethers.provider._hardhatProvider
-
-  currentNode = await provider.request({ method: 'web3_clientVersion' })
-
-  // NOTE: must run geth with params:
-  // --http.api personal,eth,net,web3
-  // --allow-insecure-unlock
-  if (currentNode.match(/geth/i) != null) {
-    for (let i = 0; i < 2; i++) {
-      const acc = await provider.request({ method: 'personal_newAccount', params: ['pass'] }).catch(rethrow)
-      await provider.request({ method: 'personal_unlockAccount', params: [acc, 'pass'] }).catch(rethrow)
-      // await fund(acc)
-    }
-  }
-}
 
 // remove "array" members, convert values to strings.
 // so Result obj like
@@ -232,8 +213,6 @@ export async function checkForBannedOps(txHash: string, checkPaymaster: boolean)
 
 export async function deployEntryPoint(paymasterStake: BigNumberish, unstakeDelaySecs: BigNumberish, provider: MockProvider): Promise<EntryPoint> {
   const i = await deployContract(provider.getSigner(), EntryPointABI, [
-    paymasterStake,
-    unstakeDelaySecs
   ]);
   return EntryPoint__factory.connect(i.address, provider.getSigner())
 }
@@ -272,8 +251,6 @@ export async function getWalletInitCode(
     fallbackHandler,
     entryPoint.address,
   ]);
-
-  console.debug("slat:", computeWalletSlat(userId));
   return `${singleton.address}${computeWalletSlat(userId).slice(2)}${sodiumSetup.slice(2)}`;
 }
 

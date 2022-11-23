@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity ^0.8.12;
 
 /**
  * manage deposits and stakes.
@@ -7,7 +7,11 @@ pragma solidity >=0.7.0 <0.9.0;
  * stake is value locked for at least "unstakeDelay" by a paymaster.
  */
 interface IStakeManager {
-    event Deposited(address indexed account, uint256 totalDeposit);
+
+    event Deposited(
+        address indexed account,
+        uint256 totalDeposit
+    );
 
     event Withdrawn(
         address indexed account,
@@ -23,7 +27,10 @@ interface IStakeManager {
     );
 
     /// Emitted once a stake is scheduled for withdrawal
-    event StakeUnlocked(address indexed account, uint256 withdrawTime);
+    event StakeUnlocked(
+        address indexed account,
+        uint256 withdrawTime
+    );
 
     event StakeWithdrawn(
         address indexed account,
@@ -32,19 +39,9 @@ interface IStakeManager {
     );
 
     /**
-     * minimum time (in seconds) required to lock a paymaster stake before it can be withdraw.
-     */
-    function unstakeDelaySec() external returns (uint32);
-
-    /**
-     * minimum value required to stake for a paymaster
-     */
-    function paymasterStake() external returns (uint256);
-
-    /**
      * @param deposit the account's deposit
      * @param staked true if this account is staked as a paymaster
-     * @param stake actual amount of ether staked for this paymaster. must be above paymasterStake
+     * @param stake actual amount of ether staked for this paymaster.
      * @param unstakeDelaySec minimum delay to withdraw the stake. must be above the global unstakeDelaySec
      * @param withdrawTime - first block timestamp where 'withdrawStake' will be callable, or zero if already locked
      * @dev sizes were chosen so that (deposit,staked) fit into one cell (used during handleOps)
@@ -61,10 +58,7 @@ interface IStakeManager {
         uint64 withdrawTime;
     }
 
-    function getDepositInfo(address account)
-        external
-        view
-        returns (DepositInfo memory info);
+    function getDepositInfo(address account) external view returns (DepositInfo memory info);
 
     /// return the deposit (for gas payment) of the account
     function balanceOf(address account) external view returns (uint256);

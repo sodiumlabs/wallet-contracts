@@ -9,12 +9,12 @@ import { BigNumber, Contract, Signer, Wallet } from 'ethers'
 import { AddressZero, callDataCost, HashZero, rethrow } from './testutils'
 import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util'
 import {
-  EntryPoint
+  EntryPoint,
+  SenderCreator__factory
 } from '../typechain'
-import { UserOperation } from './UserOperation';
-import { SenderCreator__factory } from '../typechain';
+import { UserOperation } from './UserOperation'
 
-function encode(typevalues: Array<{ type: string, val: any }>, forSignature: boolean): string {
+function encode (typevalues: Array<{ type: string, val: any }>, forSignature: boolean): string {
   const types = typevalues.map(typevalue => typevalue.type === 'bytes' && forSignature ? 'bytes32' : typevalue.type)
   const values = typevalues.map((typevalue) => typevalue.type === 'bytes' && forSignature ? keccak256(typevalue.val) : typevalue.val)
   return defaultAbiCoder.encode(types, values)
@@ -32,7 +32,7 @@ function encode(typevalues: Array<{ type: string, val: any }>, forSignature: boo
 //   return packed
 // }
 
-export function packUserOp(op: UserOperation, forSignature = true): string {
+export function packUserOp (op: UserOperation, forSignature = true): string {
   if (forSignature) {
     // lighter signature scheme (must match UserOperation#pack): do encode a zero-length signature, but strip afterwards the appended zero-length value
     const userOpType = {
@@ -76,7 +76,7 @@ export function packUserOp(op: UserOperation, forSignature = true): string {
   return encode(typevalues, forSignature)
 }
 
-export function packUserOp1(op: UserOperation): string {
+export function packUserOp1 (op: UserOperation): string {
   return defaultAbiCoder.encode([
     'address', // sender
     'uint256', // nonce
@@ -102,7 +102,7 @@ export function packUserOp1(op: UserOperation): string {
   ])
 }
 
-export function getRequestId(op: UserOperation, entryPoint: string, chainId: number): string {
+export function getUserOpHash (op: UserOperation, entryPoint: string, chainId: number): string {
   const userOpHash = keccak256(packUserOp(op, true))
   const enc = defaultAbiCoder.encode(
     ['bytes32', 'address', 'uint256'],
@@ -124,8 +124,8 @@ export const DefaultsForUserOp: UserOperation = {
   signature: '0x'
 }
 
-export function signUserOp(op: UserOperation, signer: Wallet, entryPoint: string, chainId: number): UserOperation {
-  const message = getRequestId(op, entryPoint, chainId)
+export function signUserOp (op: UserOperation, signer: Wallet, entryPoint: string, chainId: number): UserOperation {
+  const message = getUserOpHash(op, entryPoint, chainId)
   const msg1 = Buffer.concat([
     Buffer.from('\x19Ethereum Signed Message:\n32', 'ascii'),
     Buffer.from(arrayify(message))
@@ -141,7 +141,7 @@ export function signUserOp(op: UserOperation, signer: Wallet, entryPoint: string
   }
 }
 
-export function fillUserOpDefaults(op: Partial<UserOperation>, defaults = DefaultsForUserOp): UserOperation {
+export function fillUserOpDefaults (op: Partial<UserOperation>, defaults = DefaultsForUserOp): UserOperation {
   const partial: any = { ...op }
   // we want "item:undefined" to be used from defaults, and not override defaults, so we must explicitly
   // remove those so "merge" will succeed.
@@ -167,16 +167,14 @@ export function fillUserOpDefaults(op: Partial<UserOperation>, defaults = Defaul
 // sender - only in case of construction: fill sender from initCode.
 // callGasLimit: VERY crude estimation (by estimating call to wallet, and add rough entryPoint overhead
 // verificationGasLimit: hard-code default at 100k. should add "create2" cost
-export async function fillUserOp(op: Partial<UserOperation>, entryPoint?: EntryPoint): Promise<UserOperation> {
+export async function fillUserOp (op: Partial<UserOperation>, entryPoint?: EntryPoint): Promise<UserOperation> {
   const op1 = { ...op }
   const provider = entryPoint?.provider
   if (op.initCode != null) {
     if (op1.nonce == null) op1.nonce = 0
     if (op1.sender == null) {
-      // hack: if the init contract is our deployer, then we know what the address would be, without a view call
-      // console.log('\t== not our deployer. our=', Create2Factory.contractAddress, 'got', initAddr)
       if (provider == null) throw new Error('no entrypoint/provider')
-      op1.sender = await entryPoint!.connect(AddressZero).callStatic.getSenderAddress(op1.initCode!)
+      op1.sender = await entryPoint!.callStatic.getSenderAddress(op1.initCode!).catch(e => e.errorArgs.sender)
     }
     if (op1.verificationGasLimit == null) {
       if (provider == null) throw new Error('no entrypoint/provider')
@@ -197,7 +195,7 @@ export async function fillUserOp(op: Partial<UserOperation>, entryPoint?: EntryP
   }
   if (op1.nonce == null) {
     if (provider == null) throw new Error('must have entryPoint to autofill nonce')
-    const c = new Contract(op.sender!, ['function nonce() view returns(uint256)'], provider)
+    const c = new Contract(op.sender!, ['function nonce() view returns(address)'], provider)
     op1.nonce = await c.nonce().catch(rethrow())
   }
   if (op1.callGasLimit == null && op.callData != null) {
@@ -215,11 +213,9 @@ export async function fillUserOp(op: Partial<UserOperation>, entryPoint?: EntryP
   if (op1.maxFeePerGas == null) {
     if (provider == null) throw new Error('must have entryPoint to autofill maxFeePerGas')
     const block = await provider.getBlock('latest')
-
     if (block.baseFeePerGas == null) {
       block.baseFeePerGas = BigNumber.from(0);
     }
-
     op1.maxFeePerGas = block.baseFeePerGas!.add(op1.maxPriorityFeePerGas ?? DefaultsForUserOp.maxPriorityFeePerGas)
   }
   // TODO: this is exactly what fillUserOp below should do - but it doesn't.
@@ -236,17 +232,11 @@ export async function fillUserOp(op: Partial<UserOperation>, entryPoint?: EntryP
   return op2
 }
 
-export async function fillAndSign(op: Partial<UserOperation>, signer: Wallet | Signer, entryPoint?: EntryPoint): Promise<UserOperation> {
+export async function fillAndSign (op: Partial<UserOperation>, signer: Wallet, entryPoint: EntryPoint): Promise<UserOperation> {
   const provider = entryPoint?.provider
   const op2 = await fillUserOp(op, entryPoint)
 
   const chainId = await provider!.getNetwork().then(net => net.chainId)
-  const message = arrayify(getRequestId(op2, entryPoint!.address, chainId))
-
-  console.debug(signer.getAddress());
-
-  return {
-    ...op2,
-    signature: await signer.signMessage(message)
-  }
+  const message = getUserOpHash(op2, entryPoint!.address, chainId)
+  return signUserOp(op2, signer, entryPoint.address, chainId);
 }

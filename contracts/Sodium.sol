@@ -63,7 +63,7 @@ contract Sodium is
         entryPoint = _entryPoint;
         internalSetFallbackHandler(_fallbackHandler);
         internalAddSession(_sessionOwner, _platform);
-        entryPoint.depositTo{ value: address(this).balance }(address(this));
+        entryPoint.depositTo{value: address(this).balance}(address(this));
     }
 
     /// @dev Allows to execute a Safe transaction confirmed by required number of owners and then pays the account that submitted the transaction.
@@ -234,13 +234,31 @@ contract Sodium is
             );
     }
 
+    // TODO Test help
+    function toString(bytes memory data) public pure returns (string memory) {
+        bytes memory alphabet = "0123456789abcdef";
+
+        bytes memory str = new bytes(2 + data.length * 2);
+        str[0] = "0";
+        str[1] = "x";
+        for (uint i = 0; i < data.length; i++) {
+            str[2 + i * 2] = alphabet[uint(uint8(data[i] >> 4))];
+            str[3 + i * 2] = alphabet[uint(uint8(data[i] & 0x0f))];
+        }
+        return string(str);
+    }
+
     function validateUserOp(
         UserOperation calldata userOp,
-        bytes32 requestId,
+        bytes32 userOpHash,
         address aggregator,
         uint256 missingWalletFunds
     ) external view returns (uint256 deadline) {
-        require(isSessionOwner(requestId.recover(userOp.signature)), "wallet: wrong signature");
+        bytes32 signedHash = userOpHash.toEthSignedMessageHash();
+        require(
+            isSessionOwner(signedHash.recover(userOp.signature)),
+            "wallet: wrong signature"
+        );
         return 0;
     }
 

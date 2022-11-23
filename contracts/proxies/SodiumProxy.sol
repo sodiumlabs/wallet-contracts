@@ -15,6 +15,7 @@ contract SodiumProxy {
     // To reduce deployment costs this variable is internal and needs to be retrieved via `getStorageAt`
     address internal singleton;
 
+    // TODO Test help
     function toString(bytes memory data) public pure returns (string memory) {
         bytes memory alphabet = "0123456789abcdef";
 
