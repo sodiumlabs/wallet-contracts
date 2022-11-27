@@ -1,15 +1,20 @@
 {
-  "name": "sodium-hardhat",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "@0xsodium/wallet-contracts",
+  "version": "0.0.2-beta",
+  "description": "Sodium Smart Wallet contracts",
   "license": "MIT",
-  "dependencies": {
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.4"
-  },
+  "dependencies": {},
+  "main": "gen/adapter/index.js",
+  "types": "gen/adapter/index.d.ts",
+  "files": [
+    "./gen"
+  ],
   "scripts": {
-    "build": "waffle && mars && yarn innertypechain",
-    "innertypechain": "typechain --target ethers-v5 --out-dir ./typechain './build/*.json'",
-    "test": "NODE_ENV=test TS_NODE_PROJECT='test/tsconfig.json' mocha test/**.test.ts --timeout 10000"
+    "build": "waffle && mars && yarn type",
+    "test": "NODE_ENV=test TS_NODE_PROJECT='test/tsconfig.json' mocha test/**.test.ts --timeout 10000",
+    "type": "yarn type-gen && yarn type-build",
+    "type-gen": "rimraf gen/typechain && typechain --target ethers-v5 --out-dir ./gen/typechain './build/*.json'",
+    "type-build": "rimraf gen/adapter && tsc -p ./tsconfig.adapter.json"
   },
   "mocha": {
     "require": [
@@ -22,6 +27,7 @@
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
