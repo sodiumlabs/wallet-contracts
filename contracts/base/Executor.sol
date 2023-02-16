@@ -2,8 +2,6 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "../common/Enum.sol";
 
-/// @title Executor - A contract that can execute transactions
-/// @author Richard Meissner - <richard@gnosis.pm>
 contract Executor {
     function execute(
         address to,

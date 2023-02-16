@@ -1,18 +1,16 @@
 import {
   arrayify,
   defaultAbiCoder,
-  getCreate2Address,
-  hexDataSlice,
   keccak256
-} from 'ethers/lib/utils'
-import { BigNumber, Contract, Signer, Wallet } from 'ethers'
-import { AddressZero, callDataCost, HashZero, rethrow } from './testutils'
-import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util'
+} from 'ethers/lib/utils';
+import { BigNumber, Contract, Signer, Wallet } from 'ethers';
+import { AddressZero, callDataCost, HashZero, rethrow } from './testutils';
+import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util';
 import {
   EntryPoint,
   SenderCreator__factory
-} from '../typechain'
-import { UserOperation } from './UserOperation'
+} from '../gen/typechain';
+import { UserOperation } from './UserOperation';
 
 function encode (typevalues: Array<{ type: string, val: any }>, forSignature: boolean): string {
   const types = typevalues.map(typevalue => typevalue.type === 'bytes' && forSignature ? 'bytes32' : typevalue.type)
@@ -173,8 +171,10 @@ export async function fillUserOp (op: Partial<UserOperation>, entryPoint?: Entry
   if (op.initCode != null) {
     if (op1.nonce == null) op1.nonce = 0
     if (op1.sender == null) {
-      if (provider == null) throw new Error('no entrypoint/provider')
-      op1.sender = await entryPoint!.callStatic.getSenderAddress(op1.initCode!).catch(e => e.errorArgs.sender)
+      if (provider == null) throw new Error('no entrypoint/provider') 
+        const scaddress = await entryPoint!.callStatic.senderCreator();
+        const sc = SenderCreator__factory.connect(scaddress, provider);
+        op1.sender = await sc.getAddress(op1.initCode!).catch(e => e.errorArgs.sender)
     }
     if (op1.verificationGasLimit == null) {
       if (provider == null) throw new Error('no entrypoint/provider')
@@ -235,7 +235,6 @@ export async function fillUserOp (op: Partial<UserOperation>, entryPoint?: Entry
 export async function fillAndSign (op: Partial<UserOperation>, signer: Wallet, entryPoint: EntryPoint): Promise<UserOperation> {
   const provider = entryPoint?.provider
   const op2 = await fillUserOp(op, entryPoint)
-
   const chainId = await provider!.getNetwork().then(net => net.chainId)
   const message = getUserOpHash(op2, entryPoint!.address, chainId)
   return signUserOp(op2, signer, entryPoint.address, chainId);

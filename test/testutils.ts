@@ -1,4 +1,4 @@
-import { arrayify, keccak256, parseEther, hexlify, hexConcat, hexDataSlice, solidityKeccak256, id } from 'ethers/lib/utils';
+import { arrayify, keccak256, parseEther, hexDataSlice, id } from 'ethers/lib/utils';
 import { BigNumber, BigNumberish, Contract, ContractReceipt, Wallet } from 'ethers';
 import {
   EntryPoint,
@@ -6,19 +6,20 @@ import {
   Sodium__factory, Sodium as SodiumSingleton,
   IEntryPoint,
   IERC20,
-  SodiumProxy,
-  SodiumProxy__factory,
   CompatibilityFallbackHandler,
-  CompatibilityFallbackHandler__factory
-} from '../typechain';
+  CompatibilityFallbackHandler__factory,
+  SenderCreator__factory,
+  SenderCreator
+} from '../gen/typechain';
 import { expect } from 'chai';
 import { debugTransaction } from './debugTx';
 import { UserOperation } from './UserOperation';
-import { MockProvider, deployContract } from 'ethereum-waffle';
-import EntryPointABI from '../build/EntryPoint.json';
-import SingletonABI from '../build/Sodium.json';
-import CompatibilityFallbackHandlerABI from '../build/CompatibilityFallbackHandler.json';
-import { ethers } from 'ethers';
+import EntryPointABI from '../artifacts/contracts/eip4337/core/EntryPoint.sol/EntryPoint.json';
+import SenderCreatorABI from '../artifacts/contracts/eip4337/core/SenderCreator.sol/SenderCreator.json';
+import SingletonABI from '../artifacts/contracts/Sodium.sol/Sodium.json';
+import CompatibilityFallbackHandlerABI from '../artifacts/contracts/handler/CompatibilityFallbackHandler.sol/CompatibilityFallbackHandler.json';
+import { ethers, providers, ContractFactory, Signer, } from 'ethers';
+import { ContractJSON, isStandard } from './contract';
 
 export const AddressZero = ethers.constants.AddressZero
 export const HashZero = ethers.constants.HashZero
@@ -37,8 +38,58 @@ export function tonumber(x: any): number {
   }
 }
 
+type Newable<T> = { new(...args: any): T };
+
+type ContractFactoryOrJSON = Newable<ContractFactory> | ContractJSON;
+
+type ContractTypeOf<T> = T extends Newable<infer U>
+  ? (U extends ContractFactory ? ReturnType<U['deploy']> : never)
+  : Contract;
+type DeployArgumentsOf<T> = T extends Newable<infer U>
+  ? (U extends ContractFactory ? Parameters<U['deploy']> : never)
+  : any[];
+
+const isFactory = (contract: ContractFactoryOrJSON): contract is Newable<ContractFactory> =>
+  'call' in contract;
+
+export async function deployContract<T extends ContractFactoryOrJSON>(
+  wallet: Wallet | Signer,
+  factoryOrContractJson: T,
+  args: DeployArgumentsOf<T> = [] as any,
+  overrideOptions: providers.TransactionRequest = {}
+): Promise<ContractTypeOf<T>> {
+  if (isFactory(factoryOrContractJson)) {
+    const Factory = factoryOrContractJson;
+    const contractFactory = new Factory(wallet);
+    const contract = await contractFactory.deploy(...args, overrideOptions);
+    await contract.deployed();
+    return contract as any;
+  } else {
+    const contract = await deployFromJson(wallet, factoryOrContractJson, args, overrideOptions);
+    return contract as any;
+  }
+}
+
+async function deployFromJson(
+  wallet: Signer,
+  contractJson: ContractJSON,
+  args: any[],
+  overrideOptions: providers.TransactionRequest) {
+  const bytecode = isStandard(contractJson) ? contractJson.evm.bytecode : contractJson.bytecode;
+  const factory = new ContractFactory(
+    contractJson.abi,
+    bytecode,
+    wallet
+  );
+  const contract = await factory.deploy(...args, {
+    ...overrideOptions
+  });
+  await contract.deployed();
+  return contract;
+}
+
 // just throw 1eth from account[0] to the given address (or contract instance)
-export async function fund(provider: MockProvider, contractOrAddress: string | Contract, amountEth = '1'): Promise<void> {
+export async function fund(provider: ethers.providers.JsonRpcProvider, contractOrAddress: string | Contract, amountEth = '1'): Promise<void> {
   let address: string
   if (typeof contractOrAddress === 'string') {
     address = contractOrAddress
@@ -48,7 +99,7 @@ export async function fund(provider: MockProvider, contractOrAddress: string | C
   await provider.getSigner().sendTransaction({ to: address, value: parseEther(amountEth) })
 }
 
-export async function getBalance(provider: MockProvider, address: string): Promise<number> {
+export async function getBalance(provider: ethers.providers.JsonRpcProvider, address: string): Promise<number> {
   const balance = await provider.getBalance(address)
   return parseInt(balance.toString())
 }
@@ -61,12 +112,12 @@ export async function getTokenBalance(token: IERC20, address: string): Promise<n
 let counter = 0
 
 // create non-random account, so gas calculations are deterministic
-export function createWalletOwner(provider: MockProvider): Wallet {
+export function createWalletOwner(provider: ethers.providers.Provider): Wallet {
   const privateKey = keccak256(Buffer.from(arrayify(BigNumber.from(++counter))))
   return new ethers.Wallet(privateKey, provider);
 }
 
-export function createAddress(provider: MockProvider): string {
+export function createAddress(provider: ethers.providers.Provider): string {
   return createWalletOwner(provider).address
 }
 
@@ -76,12 +127,12 @@ export function callDataCost(data: string): number {
     .reduce((sum, x) => sum + x)
 }
 
-export async function calcGasUsage(provider: MockProvider, rcpt: ContractReceipt, entryPoint: EntryPoint, beneficiaryAddress?: string): Promise<{ actualGasCost: BigNumberish }> {
+export async function calcGasUsage(provider: ethers.providers.JsonRpcProvider, rcpt: ContractReceipt, entryPoint: EntryPoint, beneficiaryAddress?: string): Promise<{ actualGasCost: BigNumberish }> {
   const actualGas = await rcpt.gasUsed
   const logs = await entryPoint.queryFilter(entryPoint.filters.UserOperationEvent(), rcpt.blockHash)
-  const { actualGasCost, actualGasPrice } = logs[0].args
+  const { actualGasCost, actualGasUsed } = logs[0].args
   console.log('\t== actual gasUsed (from tx receipt)=', actualGas.toString())
-  const calculatedGasUsed = actualGasCost.toNumber() / actualGasPrice.toNumber()
+  const calculatedGasUsed = actualGasCost.toNumber() / actualGasUsed.toNumber()
   console.log('\t== calculated gasUsed (paid to beneficiary)=', calculatedGasUsed)
   const tx = await provider.getTransaction(rcpt.transactionHash)
   console.log('\t== gasDiff', actualGas.toNumber() - calculatedGasUsed - callDataCost(tx.data))
@@ -114,20 +165,16 @@ const panicCodes: { [key: number]: string } = {
 // - stack trace goes back to method (or catch) line, not inner provider
 // - attempt to parse revert data (needed for geth)
 // use with ".catch(rethrow())", so that current source file/line is meaningful.
-export function rethrow(): (e: Error) => void {
+export function rethrow(debug: boolean = false): (e: Error) => void {
   const callerStack = new Error().stack!.replace(/Error.*\n.*at.*\n/, '').replace(/.*at.* \(internal[\s\S]*/, '')
-
-  if (arguments[0] != null) {
-    throw new Error('must use .catch(rethrow()), and NOT .catch(rethrow)')
-  }
   return function (e: Error) {
     const solstack = e.stack!.match(/((?:.* at .*\.sol.*\n)+)/)
     const stack = (solstack != null ? solstack[1] : '') + callerStack
     // const regex = new RegExp('error=.*"data":"(.*?)"').compile()
-    let found = /error=.*?"return":"(.*?)"/.exec(e.message)
+    let found = /error=.*?"data":"(.*?)"/.exec(e.message)
 
     if (found == null) {
-      found = /error=.*?"data":"(.*?)"/.exec(e.message)
+      found = /data="(.*?)"/.exec(e.message)
     }
 
     let message: string
@@ -138,6 +185,10 @@ export function rethrow(): (e: Error) => void {
     } else {
       message = e.message
     }
+
+    if (debug) {
+    }
+
     const err = new Error(message)
     // @ts-ignore
     err.data = data;
@@ -161,6 +212,14 @@ export function decodeRevertReason(data: string, nullIfNoMatch = true): string |
   } else if (methodSig === '0x4e487b71') {
     const [code] = ethers.utils.defaultAbiCoder.decode(['uint256'], dataParams)
     return `Panic(${panicCodes[code] ?? code} + ')`
+  } else if (methodSig === "0x9adb6dea") {
+    // struct PaymasterInfo {
+    //  uint256 paymasterStake;
+    //  uint256 paymasterUnstakeDelay;
+    // }
+    // error SimulationResult(uint256 preOpGas, uint256 prefund, uint256 deadline, PaymasterInfo paymasterInfo);
+    const [preOpGas, prefund, deadline, paymasterInfo] = ethers.utils.defaultAbiCoder.decode(['uint256', 'uint256', 'uint256', '(uint256,uint256)'], dataParams)
+    return `SimulationResult(${preOpGas}, ${prefund}, ${deadline})`;
   }
   if (!nullIfNoMatch) {
     return data
@@ -211,19 +270,31 @@ export async function checkForBannedOps(txHash: string, checkPaymaster: boolean)
   }
 }
 
-export async function deployEntryPoint(paymasterStake: BigNumberish, unstakeDelaySecs: BigNumberish, provider: MockProvider): Promise<EntryPoint> {
+export async function deployEntryPoint(
+  provider: ethers.providers.JsonRpcProvider
+): Promise<[EntryPoint, SenderCreator]> {
+  const senderCreator = await deployContract(provider.getSigner(), SenderCreatorABI, []);
   const i = await deployContract(provider.getSigner(), EntryPointABI, [
   ]);
-  return EntryPoint__factory.connect(i.address, provider.getSigner())
+  const ep = EntryPoint__factory.connect(i.address, provider.getSigner());
+  await ep.initialize(senderCreator.address);
+  return [
+    ep,
+    SenderCreator__factory.connect(senderCreator.address, provider)
+  ];
 }
 
-export async function deploySingleton(provider: MockProvider): Promise<SodiumSingleton> {
+export async function deploySingleton(
+  provider: ethers.providers.JsonRpcProvider,
+  entryPoint: EntryPoint,
+): Promise<SodiumSingleton> {
   const i = await deployContract(provider.getSigner(), SingletonABI, [
+    entryPoint.address
   ]);
   return Sodium__factory.connect(i.address, provider.getSigner())
 }
 
-export async function deployFallbackHandler(provider: MockProvider): Promise<CompatibilityFallbackHandler> {
+export async function deployFallbackHandler(provider: ethers.providers.JsonRpcProvider): Promise<CompatibilityFallbackHandler> {
   const i = await deployContract(provider.getSigner(), CompatibilityFallbackHandlerABI, [
   ]);
   return CompatibilityFallbackHandler__factory.connect(i.address, provider.getSigner())
@@ -237,7 +308,7 @@ function computeWalletSlat(userId: string): string {
 // bytes32 salt = bytes32(initCode[20:52]);
 // bytes memory initCallData = initCode[52:];
 export async function getWalletInitCode(
-  provider: MockProvider,
+  provider: ethers.providers.JsonRpcProvider,
   entryPoint: EntryPoint,
   singleton: SodiumSingleton,
   sessionOwner: string,
@@ -249,16 +320,17 @@ export async function getWalletInitCode(
     sessionOwner,
     hexDataSlice(id(platform), 0, 4),
     fallbackHandler,
-    entryPoint.address,
   ]);
   return `${singleton.address}${computeWalletSlat(userId).slice(2)}${sodiumSetup.slice(2)}`;
 }
 
 export async function getWalletAddress(entryPoint: EntryPoint, initCode: string): Promise<string> {
-  return entryPoint.callStatic.getSenderAddress(initCode);
+  const senderCreatorAddress = await entryPoint.senderCreator();
+  const sc = SenderCreator__factory.connect(senderCreatorAddress, entryPoint.provider);
+  return sc.callStatic.getAddress(initCode);
 }
 
-export async function isDeployed(provider: MockProvider, addr: string): Promise<boolean> {
+export async function isDeployed(provider: ethers.providers.JsonRpcProvider, addr: string): Promise<boolean> {
   const code = await provider.getCode(addr)
   return code.length > 2
 }

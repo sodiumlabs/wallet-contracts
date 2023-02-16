@@ -21,7 +21,6 @@ library GnosisSafeMath {
 
         uint256 c = a * b;
         require(c / a == b);
-
         return c;
     }
 
@@ -31,7 +30,6 @@ library GnosisSafeMath {
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         require(b <= a);
         uint256 c = a - b;
-
         return c;
     }
 
@@ -41,7 +39,6 @@ library GnosisSafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a);
-
         return c;
     }
 

@@ -7,25 +7,37 @@ pragma solidity ^0.8.12;
 
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable no-inline-assembly */
-/* solhint-disable reason-string */
-/* solhint-disable avoid-tx-origin */
 
-import "../interfaces/IWallet.sol";
+import "../interfaces/IAccount.sol";
 import "../interfaces/IPaymaster.sol";
-
-import "../interfaces/IAggregatedWallet.sol";
+import "../interfaces/IAggregatedAccount.sol";
 import "../interfaces/IEntryPoint.sol";
-import "../interfaces/ICreate2Deployer.sol";
 import "./StakeManager.sol";
 import "./SenderCreator.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract EntryPoint is IEntryPoint, StakeManager {
+
+contract EntryPoint is IEntryPoint, StakeManager, UUPSUpgradeable {
     using UserOperationLib for UserOperation;
 
-    SenderCreator public immutable senderCreator = new SenderCreator();
+    SenderCreator public senderCreator;
 
     // internal value used during simulation: need to query aggregator.
     address private constant SIMULATE_FIND_AGGREGATOR = address(1);
+
+    // marker for inner call revert on out of gas
+    bytes32 private constant INNER_OUT_OF_GAS = hex"deaddead";
+
+    /**
+     * for simulation purposes, validateUserOp (and validatePaymasterUserOp) must return this value
+     * in case of signature failure, instead of revert.
+     */
+    uint256 public constant SIG_VALIDATION_FAILED = 1;
+
+    function initialize(SenderCreator _senderCreator) initializer public {
+        __UUPSUpgradeable_init();
+        senderCreator = _senderCreator;
+    }
 
     /**
      * compensate the caller's beneficiary address with the collected fees of all UserOperations.
@@ -33,9 +45,9 @@ contract EntryPoint is IEntryPoint, StakeManager {
      * @param amount amount to transfer.
      */
     function _compensate(address payable beneficiary, uint256 amount) internal {
-        require(beneficiary != address(0), "invalid beneficiary");
+        require(beneficiary != address(0), "AA90 invalid beneficiary");
         (bool success, ) = beneficiary.call{value: amount}("");
-        require(success);
+        require(success, "AA91 failed send to beneficiary");
     }
 
     /**
@@ -58,6 +70,22 @@ contract EntryPoint is IEntryPoint, StakeManager {
         ) {
             collected = _actualGasCost;
         } catch {
+            bytes32 innerRevertCode;
+            assembly {
+                returndatacopy(0, 0, 32)
+                innerRevertCode := mload(0)
+            }
+            // handleOps was called with gas limit too low. abort entire bundle.
+            if (innerRevertCode == INNER_OUT_OF_GAS) {
+                //report paymaster, since if it is deliberately caused by the bundler,
+                // it must be a revert caused by paymaster.
+                revert FailedOp(
+                    opIndex,
+                    opInfo.mUserOp.paymaster,
+                    "AA95 out of gas"
+                );
+            }
+
             uint256 actualGas = preGas - gasleft() + opInfo.preOpGas;
             collected = _handlePostOp(
                 opIndex,
@@ -72,7 +100,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
     /**
      * Execute a batch of UserOperation.
      * no signature aggregator is used.
-     * if any wallet requires an aggregator (that is, it returned an "actualAggregator" when
+     * if any account requires an aggregator (that is, it returned an "actualAggregator" when
      * performing simulateValidation), then handleAggregatedOps() must be used instead.
      * @param ops the operations to execute
      * @param beneficiary the address to receive the fees
@@ -86,7 +114,18 @@ contract EntryPoint is IEntryPoint, StakeManager {
 
         unchecked {
             for (uint256 i = 0; i < opslen; i++) {
-                _validatePrepayment(i, ops[i], opInfos[i], address(0));
+                UserOpInfo memory opInfo = opInfos[i];
+                (
+                    uint256 sigTimeRange,
+                    uint256 paymasterTimeRange,
+
+                ) = _validatePrepayment(i, ops[i], opInfo, address(0));
+                _validateSigTimeRange(
+                    i,
+                    opInfo,
+                    sigTimeRange,
+                    paymasterTimeRange
+                );
             }
 
             uint256 collected = 0;
@@ -101,7 +140,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
 
     /**
      * Execute a batch of UserOperation with Aggregators
-     * @param opsPerAggregator the operations to execute, grouped by aggregator (or address(0) for no-aggregator wallets)
+     * @param opsPerAggregator the operations to execute, grouped by aggregator (or address(0) for no-aggregator accounts)
      * @param beneficiary the address to receive the fees
      */
     function handleAggregatedOps(
@@ -123,11 +162,22 @@ contract EntryPoint is IEntryPoint, StakeManager {
             IAggregator aggregator = opa.aggregator;
             uint256 opslen = ops.length;
             for (uint256 i = 0; i < opslen; i++) {
-                _validatePrepayment(
-                    opIndex,
-                    ops[i],
-                    opInfos[opIndex],
-                    address(aggregator)
+                UserOpInfo memory opInfo = opInfos[opIndex];
+                (
+                    uint256 sigTimeRange,
+                    uint256 paymasterTimeRange,
+
+                ) = _validatePrepayment(
+                        opIndex,
+                        ops[i],
+                        opInfo,
+                        address(aggregator)
+                    );
+                _validateSigTimeRange(
+                    i,
+                    opInfo,
+                    sigTimeRange,
+                    paymasterTimeRange
                 );
                 opIndex++;
             }
@@ -144,6 +194,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
         opIndex = 0;
         for (uint256 a = 0; a < opasLen; a++) {
             UserOpsPerAggregator calldata opa = opsPerAggregator[a];
+            emit SignatureAggregatorChanged(address(opa.aggregator));
             UserOperation[] calldata ops = opa.userOps;
             uint256 opslen = ops.length;
 
@@ -152,8 +203,24 @@ contract EntryPoint is IEntryPoint, StakeManager {
                 opIndex++;
             }
         }
+        emit SignatureAggregatorChanged(address(0));
 
         _compensate(beneficiary, collected);
+    }
+
+    function simulateHandleOp(UserOperation calldata op) external override {
+        UserOpInfo memory opInfo;
+        (
+            uint256 sigTimeRange,
+            uint256 paymasterTimeRange,
+        ) = _validatePrepayment(0, op, opInfo, SIMULATE_FIND_AGGREGATOR);
+        (, uint64 validAfter, uint64 validUntil) = _intersectTimeRange(
+            sigTimeRange,
+            paymasterTimeRange
+        );
+        numberMarker();
+        uint256 paid = _executeUserOp(0, op, opInfo);
+        revert ExecutionResult(opInfo.preOpGas, paid, validAfter, validUntil);
     }
 
     //a memory copy of UserOp fields (except that dynamic byte arrays: callData, initCode and signature
@@ -186,13 +253,26 @@ contract EntryPoint is IEntryPoint, StakeManager {
         bytes calldata context
     ) external returns (uint256 actualGasCost) {
         uint256 preGas = gasleft();
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "AA92 internal call only");
         MemoryUserOp memory mUserOp = opInfo.mUserOp;
+
+        uint callGasLimit = mUserOp.callGasLimit;
+        unchecked {
+            // handleOps was called with gas limit too low. abort entire bundle.
+            if (
+                gasleft() < callGasLimit + mUserOp.verificationGasLimit + 5000
+            ) {
+                assembly {
+                    mstore(0, INNER_OUT_OF_GAS)
+                    revert(0, 32)
+                }
+            }
+        }
 
         IPaymaster.PostOpMode mode = IPaymaster.PostOpMode.opSucceeded;
         if (callData.length > 0) {
             (bool success, bytes memory result) = address(mUserOp.sender).call{
-                gas: mUserOp.callGasLimit
+                gas: callGasLimit
             }(callData);
             if (!success) {
                 if (result.length > 0) {
@@ -214,29 +294,13 @@ contract EntryPoint is IEntryPoint, StakeManager {
         }
     }
 
-    // TODO Test help
-    function toString(bytes memory data) public pure returns (string memory) {
-        bytes memory alphabet = "0123456789abcdef";
-
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint(uint8(data[i] & 0x0f))];
-        }
-        return string(str);
-    }
-
     /**
      * generate a request Id - unique identifier for this request.
      * the request ID is a hash over the content of the userOp (except the signature), the entrypoint and the chainid.
      */
-    function getUserOpHash(UserOperation calldata userOp)
-        public
-        view
-        returns (bytes32)
-    {
+    function getUserOpHash(
+        UserOperation calldata userOp
+    ) public view returns (bytes32) {
         return
             keccak256(abi.encode(userOp.hash(), address(this), block.chainid));
     }
@@ -257,7 +321,10 @@ contract EntryPoint is IEntryPoint, StakeManager {
         mUserOp.maxPriorityFeePerGas = userOp.maxPriorityFeePerGas;
         bytes calldata paymasterAndData = userOp.paymasterAndData;
         if (paymasterAndData.length > 0) {
-            require(paymasterAndData.length >= 20, "invalid paymasterAndData");
+            require(
+                paymasterAndData.length >= 20,
+                "AA93 invalid paymasterAndData"
+            );
             mUserOp.paymaster = address(bytes20(paymasterAndData[:20]));
         } else {
             mUserOp.paymaster = address(0);
@@ -265,55 +332,69 @@ contract EntryPoint is IEntryPoint, StakeManager {
     }
 
     /**
-     * Simulate a call to wallet.validateUserOp and paymaster.validatePaymasterUserOp.
-     * @dev this method always revert. Successful result is SimulationResult error. other errors are failures.
-     * @dev The node must also verify it doesn't use banned opcodes, and that it doesn't reference storage outside the wallet's data.
+     * Simulate a call to account.validateUserOp and paymaster.validatePaymasterUserOp.
+     * @dev this method always revert. Successful result is ValidationResult error. other errors are failures.
+     * @dev The node must also verify it doesn't use banned opcodes, and that it doesn't reference storage outside the account's data.
      * @param userOp the user operation to validate.
      */
     function simulateValidation(UserOperation calldata userOp) external {
-        uint256 preGas = gasleft();
-
         UserOpInfo memory outOpInfo;
-
-        (address aggregator, uint256 deadline) = _validatePrepayment(
-            0,
-            userOp,
-            outOpInfo,
-            SIMULATE_FIND_AGGREGATOR
-        );
-        uint256 prefund = outOpInfo.prefund;
-        uint256 preOpGas = preGas - gasleft() + userOp.preVerificationGas;
-        DepositInfo memory depositInfo = getDepositInfo(
+        (
+            uint256 sigTimeRange,
+            uint256 paymasterTimeRange,
+            address aggregator
+        ) = _validatePrepayment(0, userOp, outOpInfo, SIMULATE_FIND_AGGREGATOR);
+        StakeInfo memory paymasterInfo = getStakeInfo(
             outOpInfo.mUserOp.paymaster
         );
-        PaymasterInfo memory paymasterInfo = PaymasterInfo(
-            depositInfo.stake,
-            depositInfo.unstakeDelaySec
+        StakeInfo memory senderInfo = getStakeInfo(outOpInfo.mUserOp.sender);
+        StakeInfo memory factoryInfo;
+        {
+            bytes calldata initCode = userOp.initCode;
+            address factory = initCode.length >= 20
+                ? address(bytes20(initCode[0:20]))
+                : address(0);
+            factoryInfo = getStakeInfo(factory);
+        }
+
+        (
+            bool sigFailed,
+            uint64 validAfter,
+            uint64 validUntil
+        ) = _intersectTimeRange(sigTimeRange, paymasterTimeRange);
+        ReturnInfo memory returnInfo = ReturnInfo(
+            outOpInfo.preOpGas,
+            outOpInfo.prefund,
+            sigFailed,
+            validAfter,
+            validUntil,
+            getMemoryBytesFromOffset(outOpInfo.contextOffset)
         );
 
         if (aggregator != address(0)) {
-            depositInfo = getDepositInfo(aggregator);
-            AggregationInfo memory aggregationInfo = AggregationInfo(
+            AggregatorStakeInfo memory aggregatorInfo = AggregatorStakeInfo(
                 aggregator,
-                depositInfo.stake,
-                depositInfo.unstakeDelaySec
+                getStakeInfo(aggregator)
             );
-            revert SimulationResultWithAggregation(
-                preOpGas,
-                prefund,
-                deadline,
+            revert ValidationResultWithAggregation(
+                returnInfo,
+                senderInfo,
+                factoryInfo,
                 paymasterInfo,
-                aggregationInfo
+                aggregatorInfo
             );
         }
-        revert SimulationResult(preOpGas, prefund, deadline, paymasterInfo);
+        revert ValidationResult(
+            returnInfo,
+            senderInfo,
+            factoryInfo,
+            paymasterInfo
+        );
     }
 
-    function _getRequiredPrefund(MemoryUserOp memory mUserOp)
-        internal
-        view
-        returns (uint256 requiredPrefund)
-    {
+    function _getRequiredPrefund(
+        MemoryUserOp memory mUserOp
+    ) internal view returns (uint256 requiredPrefund) {
         unchecked {
             //when using a Paymaster, the verificationGasLimit is used also to as a limit for the postOp call.
             // our security model might call postOp eventually twice
@@ -322,7 +403,6 @@ contract EntryPoint is IEntryPoint, StakeManager {
                 mUserOp.verificationGasLimit *
                 mul +
                 mUserOp.preVerificationGas;
-
             // TODO: copy logic of gasPrice?
             requiredPrefund = requiredGas * getUserOpGasPrice(mUserOp);
         }
@@ -331,54 +411,54 @@ contract EntryPoint is IEntryPoint, StakeManager {
     // create the sender's contract if needed.
     function _createSenderIfNeeded(
         uint256 opIndex,
-        MemoryUserOp memory mUserOp,
+        UserOpInfo memory opInfo,
         bytes calldata initCode
     ) internal {
         if (initCode.length != 0) {
-            if (mUserOp.sender.code.length != 0)
+            address sender = opInfo.mUserOp.sender;
+            if (sender.code.length != 0)
                 revert FailedOp(
                     opIndex,
                     address(0),
-                    "sender already constructed"
+                    "AA10 sender already constructed"
                 );
-            address sender1 = senderCreator.createSender(initCode);
+            address sender1 = senderCreator.createSender{
+                gas: opInfo.mUserOp.verificationGasLimit
+            }(initCode);
             if (sender1 == address(0))
-                revert FailedOp(opIndex, address(0), "initCode failed");
-            if (sender1 != mUserOp.sender)
                 revert FailedOp(
                     opIndex,
                     address(0),
-                    "sender doesn't match initCode address"
+                    "AA13 initCode failed or OOG"
+                );
+            if (sender1 != sender)
+                revert FailedOp(
+                    opIndex,
+                    address(0),
+                    "AA14 initCode must return sender"
                 );
             if (sender1.code.length == 0)
                 revert FailedOp(
                     opIndex,
                     address(0),
-                    "initCode failed to create sender"
+                    "AA15 initCode must create sender"
                 );
+            address factory = address(bytes20(initCode[0:20]));
+            emit AccountDeployed(
+                opInfo.userOpHash,
+                sender,
+                factory,
+                opInfo.mUserOp.paymaster
+            );
         }
     }
 
     /**
-     * Get counterfactual sender address.
-     *  Calculate the sender contract address that will be generated by the initCode and salt in the UserOperation.
-     * this method always revert, and returns the address in SenderAddressResult error
-     * @param initCode the constructor code to be passed into the UserOperation.
+     * call account.validateUserOp.
+     * revert (with FailedOp) in case validateUserOp reverts, or account didn't send required prefund.
+     * decrement account's deposit if needed
      */
-    function getSenderAddress(bytes calldata initCode)
-        external
-        view
-        returns (address)
-    {
-        return senderCreator.getAddress(initCode);
-    }
-
-    /**
-     * call wallet.validateUserOp.
-     * revert (with FailedOp) in case validateUserOp reverts, or wallet didn't send required prefund.
-     * decrement wallet's deposit if needed
-     */
-    function _validateWalletPrepayment(
+    function _validateAccountPrepayment(
         uint256 opIndex,
         UserOperation calldata op,
         UserOpInfo memory opInfo,
@@ -387,17 +467,37 @@ contract EntryPoint is IEntryPoint, StakeManager {
     )
         internal
         returns (
-            uint256 gasUsedByValidateWalletPrepayment,
+            uint256 gasUsedByValidateAccountPrepayment,
             address actualAggregator,
-            uint256 deadline
+            uint256 sigTimeRange
         )
     {
         unchecked {
             uint256 preGas = gasleft();
             MemoryUserOp memory mUserOp = opInfo.mUserOp;
-            _createSenderIfNeeded(opIndex, mUserOp, op.initCode);
+            address sender = mUserOp.sender;
+            _createSenderIfNeeded(opIndex, opInfo, op.initCode);
             if (aggregator == SIMULATE_FIND_AGGREGATOR) {
-                try IAggregatedWallet(mUserOp.sender).getAggregator() returns (
+                numberMarker();
+
+                if (sender.code.length == 0) {
+                    // it would revert anyway. but give a meaningful message
+                    revert FailedOp(0, address(0), "AA20 account not deployed");
+                }
+                if (
+                    mUserOp.paymaster != address(0) &&
+                    mUserOp.paymaster.code.length == 0
+                ) {
+                    // it would revert anyway. but give a meaningful message
+                    revert FailedOp(
+                        0,
+                        address(0),
+                        "AA30 paymaster not deployed"
+                    );
+                }
+                // during simulation, we don't use given aggregator,
+                // but query the account for its aggregator
+                try IAggregatedAccount(sender).getAggregator() returns (
                     address userOpAggregator
                 ) {
                     aggregator = actualAggregator = userOpAggregator;
@@ -405,29 +505,21 @@ contract EntryPoint is IEntryPoint, StakeManager {
                     aggregator = actualAggregator = address(0);
                 }
             }
-            uint256 missingWalletFunds = 0;
-            address sender = mUserOp.sender;
+            uint256 missingAccountFunds = 0;
             address paymaster = mUserOp.paymaster;
             if (paymaster == address(0)) {
                 uint256 bal = balanceOf(sender);
-                missingWalletFunds = bal > requiredPrefund
+                missingAccountFunds = bal > requiredPrefund
                     ? 0
                     : requiredPrefund - bal;
             }
-            try
-                IWallet(sender).validateUserOp{
-                    gas: mUserOp.verificationGasLimit
-                }(op, opInfo.userOpHash, aggregator, missingWalletFunds)
-            returns (uint256 _deadline) {
-                // solhint-disable-next-line not-rely-on-time
-                if (_deadline != 0 && _deadline < block.timestamp) {
-                    revert FailedOp(opIndex, address(0), "expired");
-                }
-                deadline = _deadline;
+            try IAccount(sender).validateUserOp{ gas: mUserOp.verificationGasLimit }(op, opInfo.userOpHash, aggregator, missingAccountFunds)
+            returns (uint256 _sigTimeRange) {
+                sigTimeRange = _sigTimeRange;
             } catch Error(string memory revertReason) {
                 revert FailedOp(opIndex, address(0), revertReason);
             } catch {
-                revert FailedOp(opIndex, address(0), "");
+                revert FailedOp(opIndex, address(0), "AA23 reverted (or OOG)");
             }
             if (paymaster == address(0)) {
                 DepositInfo storage senderInfo = deposits[sender];
@@ -436,12 +528,12 @@ contract EntryPoint is IEntryPoint, StakeManager {
                     revert FailedOp(
                         opIndex,
                         address(0),
-                        "wallet didn't pay prefund"
+                        "AA21 didn't pay prefund"
                     );
                 }
                 senderInfo.deposit = uint112(deposit - requiredPrefund);
             }
-            gasUsedByValidateWalletPrepayment = preGas - gasleft();
+            gasUsedByValidateAccountPrepayment = preGas - gasleft();
         }
     }
 
@@ -457,50 +549,132 @@ contract EntryPoint is IEntryPoint, StakeManager {
         UserOperation calldata op,
         UserOpInfo memory opInfo,
         uint256 requiredPreFund,
-        uint256 gasUsedByValidateWalletPrepayment
-    ) internal returns (bytes memory context, uint256 deadline) {
+        uint256 gasUsedByValidateAccountPrepayment
+    ) internal returns (bytes memory context, uint256 sigTimeRange) {
         unchecked {
             MemoryUserOp memory mUserOp = opInfo.mUserOp;
+            uint256 verificationGasLimit = mUserOp.verificationGasLimit;
+            require(
+                verificationGasLimit > gasUsedByValidateAccountPrepayment,
+                "AA41 too little verificationGas"
+            );
+            uint256 gas = verificationGasLimit -
+                gasUsedByValidateAccountPrepayment;
+
             address paymaster = mUserOp.paymaster;
             DepositInfo storage paymasterInfo = deposits[paymaster];
             uint256 deposit = paymasterInfo.deposit;
-            bool staked = paymasterInfo.staked;
-            if (!staked) {
-                revert FailedOp(opIndex, paymaster, "not staked");
-            }
             if (deposit < requiredPreFund) {
                 revert FailedOp(
                     opIndex,
                     paymaster,
-                    "paymaster deposit too low"
+                    "AA31 paymaster deposit too low"
                 );
             }
             paymasterInfo.deposit = uint112(deposit - requiredPreFund);
-            uint256 gas = mUserOp.verificationGasLimit -
-                gasUsedByValidateWalletPrepayment;
             try
                 IPaymaster(paymaster).validatePaymasterUserOp{gas: gas}(
                     op,
                     opInfo.userOpHash,
                     requiredPreFund
                 )
-            returns (bytes memory _context, uint256 _deadline) {
-                // solhint-disable-next-line not-rely-on-time
-                if (_deadline != 0 && _deadline < block.timestamp) {
-                    revert FailedOp(opIndex, paymaster, "expired");
-                }
+            returns (bytes memory _context, uint256 _sigTimeRange) {
                 context = _context;
-                deadline = _deadline;
+                sigTimeRange = _sigTimeRange;
             } catch Error(string memory revertReason) {
                 revert FailedOp(opIndex, paymaster, revertReason);
             } catch {
-                revert FailedOp(opIndex, paymaster, "");
+                revert FailedOp(opIndex, paymaster, "AA33 reverted (or OOG)");
             }
         }
     }
 
     /**
-     * validate wallet and paymaster (if defined).
+     * revert if either account sigTimeRange or paymaster sigTimeRange is expired
+     */
+    function _validateSigTimeRange(
+        uint256 opIndex,
+        UserOpInfo memory opInfo,
+        uint256 sigTimeRange,
+        uint256 paymasterTimeRange
+    ) internal view {
+        (bool sigFailed, bool outOfTimeRange) = _getSigTimeRange(sigTimeRange);
+        if (sigFailed) {
+            revert FailedOp(opIndex, address(0), "AA24 signature error");
+        }
+        if (outOfTimeRange) {
+            revert FailedOp(opIndex, address(0), "AA22 expired or not due");
+        }
+        (sigFailed, outOfTimeRange) = _getSigTimeRange(paymasterTimeRange);
+        if (sigFailed) {
+            revert FailedOp(
+                opIndex,
+                opInfo.mUserOp.paymaster,
+                "AA34 signature error"
+            );
+        }
+        if (outOfTimeRange) {
+            revert FailedOp(
+                opIndex,
+                opInfo.mUserOp.paymaster,
+                "AA32 paymaster expired or not due"
+            );
+        }
+    }
+
+    function _getSigTimeRange(
+        uint sigTimeRange
+    ) internal view returns (bool sigFailed, bool outOfTimeRange) {
+        if (sigTimeRange == 0) {
+            return (false, false);
+        }
+        uint validAfter;
+        uint validUntil;
+        (sigFailed, validAfter, validUntil) = _parseSigTimeRange(sigTimeRange);
+        // solhint-disable-next-line not-rely-on-time
+        outOfTimeRange =
+            block.timestamp > validUntil ||
+            block.timestamp < validAfter;
+    }
+
+    //extract sigFailed, validAfter, validUntil.
+    // also convert zero validUntil to type(uint64).max
+    function _parseSigTimeRange(
+        uint sigTimeRange
+    )
+        internal
+        pure
+        returns (bool sigFailed, uint64 validAfter, uint64 validUntil)
+    {
+        sigFailed = uint8(sigTimeRange) != 0;
+        // subtract one, to explicitly treat zero as max-value
+        validUntil = uint64(int64(int(sigTimeRange >> 8) - 1));
+        validAfter = uint64(sigTimeRange >> (8 + 64));
+    }
+
+    // intersect account and paymaster ranges.
+    function _intersectTimeRange(
+        uint sigTimeRange,
+        uint paymasterTimeRange
+    )
+        internal
+        pure
+        returns (bool sigFailed, uint64 validAfter, uint64 validUntil)
+    {
+        (sigFailed, validAfter, validUntil) = _parseSigTimeRange(sigTimeRange);
+        (
+            bool pmSigFailed,
+            uint64 pmValidAfter,
+            uint64 pmValidUntil
+        ) = _parseSigTimeRange(paymasterTimeRange);
+        sigFailed = sigFailed || pmSigFailed;
+
+        if (validAfter < pmValidAfter) validAfter = pmValidAfter;
+        if (validUntil > pmValidUntil) validUntil = pmValidUntil;
+    }
+
+    /**
+     * validate account and paymaster (if defined).
      * also make sure total validation doesn't exceed verificationGasLimit
      * this method is called off-chain (simulateValidation()) and on-chain (from handleOps)
      * @param opIndex the index of this userOp into the "opInfos" array
@@ -511,7 +685,14 @@ contract EntryPoint is IEntryPoint, StakeManager {
         UserOperation calldata userOp,
         UserOpInfo memory outOpInfo,
         address aggregator
-    ) private returns (address actualAggregator, uint256 deadline) {
+    )
+        private
+        returns (
+            uint256 sigTimeRange,
+            uint256 paymasterTimeRange,
+            address actualAggregator
+        )
+    {
         uint256 preGas = gasleft();
         MemoryUserOp memory mUserOp = outOpInfo.mUserOp;
         _copyUserOpToMemory(userOp, mUserOp);
@@ -524,40 +705,34 @@ contract EntryPoint is IEntryPoint, StakeManager {
             mUserOp.callGasLimit |
             userOp.maxFeePerGas |
             userOp.maxPriorityFeePerGas;
-        require(maxGasValues <= type(uint120).max, "gas values overflow");
+        require(maxGasValues <= type(uint120).max, "AA94 gas values overflow");
 
-        uint256 gasUsedByValidateWalletPrepayment;
+        uint256 gasUsedByValidateAccountPrepayment;
         uint256 requiredPreFund = _getRequiredPrefund(mUserOp);
         (
-            gasUsedByValidateWalletPrepayment,
+            gasUsedByValidateAccountPrepayment,
             actualAggregator,
-            deadline
-        ) = _validateWalletPrepayment(
+            sigTimeRange
+        ) = _validateAccountPrepayment(
             opIndex,
             userOp,
             outOpInfo,
             aggregator,
             requiredPreFund
         );
-        //a "marker" where wallet opcode validation is done and paymaster opcode validation is about to start
+        //a "marker" where account opcode validation is done and paymaster opcode validation is about to start
         // (used only by off-chain simulateValidation)
         numberMarker();
 
         bytes memory context;
         if (mUserOp.paymaster != address(0)) {
-            uint paymasterDeadline;
-            (context, paymasterDeadline) = _validatePaymasterPrepayment(
+            (context, paymasterTimeRange) = _validatePaymasterPrepayment(
                 opIndex,
                 userOp,
                 outOpInfo,
                 requiredPreFund,
-                gasUsedByValidateWalletPrepayment
+                gasUsedByValidateAccountPrepayment
             );
-            if (paymasterDeadline != 0 && paymasterDeadline < deadline) {
-                deadline = paymasterDeadline;
-            }
-        } else {
-            context = "";
         }
         unchecked {
             uint256 gasUsed = preGas - gasleft();
@@ -566,7 +741,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
                 revert FailedOp(
                     opIndex,
                     mUserOp.paymaster,
-                    "Used more than verificationGasLimit"
+                    "AA40 over verificationGasLimit"
                 );
             }
             outOpInfo.prefund = requiredPreFund;
@@ -579,7 +754,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
      * process post-operation.
      * called just after the callData is executed.
      * if a paymaster is defined and its validation returned a non-empty context, its postOp is called.
-     * the excess amount is refunded to the wallet (or paymaster - if it is was used in the request)
+     * the excess amount is refunded to the account (or paymaster - if it is was used in the request)
      * @param opIndex index in the batch
      * @param mode - whether is called from innerHandleOp, or outside (postOpReverted)
      * @param opInfo userOp fields and info collected during validation
@@ -622,7 +797,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
                             revert FailedOp(
                                 opIndex,
                                 paymaster,
-                                "postOp revert"
+                                "A50 postOp revert"
                             );
                         }
                     }
@@ -634,7 +809,7 @@ contract EntryPoint is IEntryPoint, StakeManager {
                 revert FailedOp(
                     opIndex,
                     paymaster,
-                    "prefund below actualGasCost"
+                    "A51 prefund below actualGasCost"
                 );
             }
             uint256 refund = opInfo.prefund - actualGasCost;
@@ -645,22 +820,20 @@ contract EntryPoint is IEntryPoint, StakeManager {
                 mUserOp.sender,
                 mUserOp.paymaster,
                 mUserOp.nonce,
+                success,
                 actualGasCost,
-                gasPrice,
-                success
+                actualGas
             );
         } // unchecked
     }
 
     /**
      * the gas price this UserOp agrees to pay.
-     * relayer/miner might submit the TX with higher priorityFee, but the user should not
+     * relayer/block builder might submit the TX with higher priorityFee, but the user should not
      */
-    function getUserOpGasPrice(MemoryUserOp memory mUserOp)
-        internal
-        view
-        returns (uint256)
-    {
+    function getUserOpGasPrice(
+        MemoryUserOp memory mUserOp
+    ) internal view returns (uint256) {
         unchecked {
             uint256 maxFeePerGas = mUserOp.maxFeePerGas;
             uint256 maxPriorityFeePerGas = mUserOp.maxPriorityFeePerGas;
@@ -676,21 +849,17 @@ contract EntryPoint is IEntryPoint, StakeManager {
         return a < b ? a : b;
     }
 
-    function getOffsetOfMemoryBytes(bytes memory data)
-        internal
-        pure
-        returns (uint256 offset)
-    {
+    function getOffsetOfMemoryBytes(
+        bytes memory data
+    ) internal pure returns (uint256 offset) {
         assembly {
             offset := data
         }
     }
 
-    function getMemoryBytesFromOffset(uint256 offset)
-        internal
-        pure
-        returns (bytes memory data)
-    {
+    function getMemoryBytesFromOffset(
+        uint256 offset
+    ) internal pure returns (bytes memory data) {
         assembly {
             data := offset
         }
@@ -698,10 +867,14 @@ contract EntryPoint is IEntryPoint, StakeManager {
 
     //place the NUMBER opcode in the code.
     // this is used as a marker during simulation, as this OP is completely banned from the simulated code of the
-    // wallet and paymaster.
+    // account and paymaster.
     function numberMarker() internal view {
         assembly {
             mstore(0, number())
         }
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override {
+
     }
 }

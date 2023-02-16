@@ -6,26 +6,34 @@ import "./base/SessionManager.sol";
 import "./base/FallbackManager.sol";
 import "./base/GuardManager.sol";
 import "./common/Singleton.sol";
-import "./common/SignatureDecoder.sol";
-import "./common/SecuredTokenTransfer.sol";
-import "./common/StorageAccessible.sol";
+import "./common/EtherPaymentFallback.sol";
 import "./interfaces/ISignatureValidator.sol";
 import "./external/GnosisSafeMath.sol";
-import "./eip4337/interfaces/IWallet.sol";
+import "./eip4337/interfaces/IAccount.sol";
 import "./eip4337/interfaces/IEntryPoint.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "./base/NonceManager.sol";
+import "./common/Enum.sol";
+
+struct Transaction {
+    Enum.Operation op; // Performs delegatecall
+    bool revertOnError; // Reverts transaction bundle if tx fails
+    uint256 gasLimit; // Maximum gas to be forwarded
+    address target; // Address of the contract to call
+    uint256 value; // Amount of ETH to pass with the call
+    bytes data; // calldata to pass
+}
 
 contract Sodium is
     Singleton,
     ModuleManager,
     SessionManager,
-    SignatureDecoder,
-    SecuredTokenTransfer,
+    NonceManager,
     ISignatureValidatorConstants,
     FallbackManager,
-    StorageAccessible,
     GuardManager,
-    IWallet
+    IAccount,
+    EtherPaymentFallback
 {
     using ECDSA for bytes32;
     using GnosisSafeMath for uint256;
@@ -44,128 +52,107 @@ contract Sodium is
         address fallbackHandler
     );
 
-    uint256 public nonce;
     bool private initialized;
-    IEntryPoint private entryPoint;
+    address internal immutable entryPoint;
 
     // This constructor ensures that this contract can only be used as a master copy for Proxy contracts
-    constructor() {}
+    constructor(
+        IEntryPoint _entryPoint
+    ) {
+        entryPoint = address(_entryPoint);
+    }
 
     function setup(
         address _sessionOwner,
         bytes4 _platform,
-        address _fallbackHandler,
-        IEntryPoint _entryPoint
+        address _fallbackHandler
     ) public {
         require(!initialized, "Already initialized");
         require(_fallbackHandler != address(0), "Required fallback handler");
         initialized = true;
-        entryPoint = _entryPoint;
         internalSetFallbackHandler(_fallbackHandler);
         internalAddSession(_sessionOwner, _platform);
-        entryPoint.depositTo{value: address(this).balance}(address(this));
     }
 
-    /// @dev Allows to execute a Safe transaction confirmed by required number of owners and then pays the account that submitted the transaction.
-    ///      Note: The fees are always transferred, even if the user transaction fails.
-    /// @param to Destination address of Safe transaction.
-    /// @param value Ether value of Safe transaction.
-    /// @param data Data payload of Safe transaction.
-    /// @param operation Operation type of Safe transaction.
-    /// @param safeTxGas Gas that should be used for the Safe transaction.
-    /// @param baseGas Gas costs that are independent of the transaction execution(e.g. base transaction fee, signature check, payment of the refund)
-    /// @param gasPrice Gas price that should be used for the payment calculation.
-    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
-    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
-    /// @param signatures Packed signature data ({bytes32 r}{bytes32 s}{uint8 v})
-    function execTransaction(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address payable refundReceiver,
-        bytes memory signatures
-    ) public payable virtual returns (bool success) {
-        // bytes32 txHash;
-        // // Use scope here to limit variable lifetime and prevent `stack too deep` errors
-        // {
-        //     bytes memory txHashData = encodeTransactionData(
-        //         // Transaction info
-        //         to,
-        //         value,
-        //         data,
-        //         operation,
-        //         safeTxGas,
-        //         // Payment info
-        //         baseGas,
-        //         gasPrice,
-        //         gasToken,
-        //         refundReceiver,
-        //         // Signature info
-        //         nonce
-        //     );
-        //     // Increase nonce and execute transaction.
-        //     nonce++;
-        //     txHash = keccak256(txHashData);
-        //     // TODO
-        //     // checkSignatures(txHash, txHashData, signatures);
-        // }
-        // // execute(to, value, data, operation, gasPrice == 0 ? (gasleft() - 2500) : safeTxGas)
-        // // address guard = getGuard();
-        // // {
-        // //     if (guard != address(0)) {
-        // //         Guard(guard).checkTransaction(
-        // //             // Transaction info
-        // //             to,
-        // //             value,
-        // //             data,
-        // //             operation,
-        // //             safeTxGas,
-        // //             // Payment info
-        // //             baseGas,
-        // //             gasPrice,
-        // //             gasToken,
-        // //             refundReceiver,
-        // //             // Signature info
-        // //             signatures,
-        // //             msg.sender
-        // //         );
-        // //     }
-        // // }
-        // // We require some gas to emit the events (at least 2500) after the execution and some to perform code until the execution (500)
-        // // We also include the 1/64 in the check that is not send along with a call to counteract potential shortings because of EIP-150
+    function _requireFromAdmin() internal view {
+        require(
+            msg.sender == address(this) || msg.sender == address(entryPoint),
+            "only entryPoint or wallet self"
+        );
+    }
+
+    /**
+     * @notice Allow eip-4337 entryPoint or wallet self to execute an action
+     * @dev Relayers must ensure that the gasLimit specified for each transaction
+     *      is acceptable to them. A user could specify large enough that it could
+     *      consume all the gas available.
+     * @param _txs Transactions to process
+     */
+    function execute(Transaction[] memory _txs) public {
+        // only allow eip-4337 entryPoint or wallet self to execute an action
+        _requireFromAdmin();
+        // Execute the transactions
+        _execute(_txs);
+    }
+
+    /**
+     * @notice Executes a list of transactions
+     * @param _txs  Transactions to execute
+     */
+    function _execute(Transaction[] memory _txs) private {
+        // Execute transaction
+        for (uint256 i = 0; i < _txs.length; i++) {
+            Transaction memory transaction = _txs[i];
+            bool success;
+            bytes memory result;
+            require(
+                gasleft() >= transaction.gasLimit,
+                "Sodium: NOT_ENOUGH_GAS"
+            );
+            if (transaction.op == Enum.Operation.DelegateCall) {
+                (success, result) = transaction.target.delegatecall{
+                    gas: transaction.gasLimit == 0
+                        ? gasleft()
+                        : transaction.gasLimit
+                }(transaction.data);
+            } else {
+                (success, result) = transaction.target.call{
+                    value: transaction.value,
+                    gas: transaction.gasLimit == 0
+                        ? gasleft()
+                        : transaction.gasLimit
+                }(transaction.data);
+            }
+            if (!success && transaction.revertOnError) {
+                assembly {
+                    revert(add(result, 0x20), mload(result))
+                }
+            }
+        }
+    }
+
+    function _payPrefund(uint256 missingAccountFunds) internal virtual {
+        if (missingAccountFunds != 0) {
+            (bool success,) = payable(msg.sender).call{value : missingAccountFunds, gas : type(uint256).max}("");
+            (success);
+            //ignore failure (its EntryPoint's job to verify, not account.)
+        }
+    }
+
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        address,
+        uint256 missingWalletFunds
+    ) external returns (uint256) {
+        _requireFromAdmin();
+        bytes32 signedHash = userOpHash.toEthSignedMessageHash();
         // require(
-        //     gasleft() >= ((safeTxGas * 64) / 63).max(safeTxGas + 2500) + 500,
-        //     "GS010"
+        //     isSessionOwner(signedHash.recover(userOp.signature)),
+        //     "wallet: wrong signature"
         // );
-        // // Use scope here to limit variable lifetime and prevent `stack too deep` errors
-        // {
-        //     uint256 gasUsed = gasleft();
-        //     // If the gasPrice is 0 we assume that nearly all available gas can be used (it is always more than safeTxGas)
-        //     // We only substract 2500 (compared to the 3000 before) to ensure that the amount passed is still higher than safeTxGas
-        //     success = execute(
-        //         to,
-        //         value,
-        //         data,
-        //         operation,
-        //         gasPrice == 0 ? (gasleft() - 2500) : safeTxGas
-        //     );
-        //     gasUsed = gasUsed.sub(gasleft());
-        //     // If no safeTxGas and no gasPrice was set (e.g. both are 0), then the internal tx is required to be successful
-        //     // This makes it possible to use `estimateGas` without issues, as it searches for the minimum gas where the tx doesn't revert
-        //     require(success || safeTxGas != 0 || gasPrice != 0, "GS013");
-        //     // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
-        //     uint256 payment = 0;
-        //     if (gasPrice > 0) {
-        //         // payment = handlePayment(gasUsed, baseGas, gasPrice, gasToken, refundReceiver);
-        //     }
-        //     if (success) emit ExecutionSuccess(txHash, payment);
-        //     else emit ExecutionFailure(txHash, payment);
-        // }
+        _payPrefund(missingWalletFunds);
+        return 0;
     }
 
     /// @dev Returns the chain id used by this contract.
@@ -182,145 +169,6 @@ contract Sodium is
         return
             keccak256(
                 abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
-            );
-    }
-
-    /// @dev Returns the bytes that are hashed to be signed by owners.
-    /// @param to Destination address.
-    /// @param value Ether value.
-    /// @param data Data payload.
-    /// @param operation Operation type.
-    /// @param safeTxGas Gas that should be used for the safe transaction.
-    /// @param baseGas Gas costs for that are independent of the transaction execution(e.g. base transaction fee, signature check, payment of the refund)
-    /// @param gasPrice Maximum gas price that should be used for this transaction.
-    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
-    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
-    /// @param _nonce Transaction nonce.
-    /// @return Transaction hash bytes.
-    function encodeTransactionData(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address refundReceiver,
-        uint256 _nonce
-    ) public view returns (bytes memory) {
-        // TODO
-        bytes32 safeTxHash = keccak256(
-            abi.encode(
-                "",
-                to,
-                value,
-                keccak256(data),
-                operation,
-                safeTxGas,
-                baseGas,
-                gasPrice,
-                gasToken,
-                refundReceiver,
-                _nonce
-            )
-        );
-        return
-            abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
-                domainSeparator(),
-                safeTxHash
-            );
-    }
-
-    // TODO Test help
-    function toString(bytes memory data) public pure returns (string memory) {
-        bytes memory alphabet = "0123456789abcdef";
-
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint(uint8(data[i] & 0x0f))];
-        }
-        return string(str);
-    }
-
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash,
-        address aggregator,
-        uint256 missingWalletFunds
-    ) external view returns (uint256 deadline) {
-        bytes32 signedHash = userOpHash.toEthSignedMessageHash();
-        require(
-            isSessionOwner(signedHash.recover(userOp.signature)),
-            "wallet: wrong signature"
-        );
-        return 0;
-    }
-
-    // return the native token amount
-    function balanceOf() public view returns (uint256) {
-        return entryPoint.balanceOf(address(this));
-    }
-
-    // add to the deposit of the given account
-    function depositTo() public payable {
-        return entryPoint.depositTo(address(this));
-    }
-
-    // withdraw from the deposit
-    function withdrawTo(address payable withdrawAddress, uint256 withdrawAmount)
-        external
-    {
-        return entryPoint.withdrawTo(withdrawAddress, withdrawAmount);
-    }
-
-    receive() external payable {
-        entryPoint.depositTo(address(this));
-    }
-
-    /// @dev Returns hash to be signed by owners.
-    /// @param to Destination address.
-    /// @param value Ether value.
-    /// @param data Data payload.
-    /// @param operation Operation type.
-    /// @param safeTxGas Fas that should be used for the safe transaction.
-    /// @param baseGas Gas costs for data used to trigger the safe transaction.
-    /// @param gasPrice Maximum gas price that should be used for this transaction.
-    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
-    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
-    /// @param _nonce Transaction nonce.
-    /// @return Transaction hash.
-    function getTransactionHash(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation,
-        uint256 safeTxGas,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address refundReceiver,
-        uint256 _nonce
-    ) public view returns (bytes32) {
-        return
-            keccak256(
-                encodeTransactionData(
-                    to,
-                    value,
-                    data,
-                    operation,
-                    safeTxGas,
-                    baseGas,
-                    gasPrice,
-                    gasToken,
-                    refundReceiver,
-                    _nonce
-                )
             );
     }
 }

@@ -2,18 +2,22 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../../proxies/SodiumProxy.sol";
+import "../../Wallet.sol";
 
 /**
  * helper contract for EntryPoint, to call userOp.initCode from a "neutral" address,
  * which is explicitly not the entryPoint itself.
  */
 contract SenderCreator {
-    function deployProxy(address _singleton, bytes memory initCode, bytes32 salt)
-        internal
-        returns (SodiumProxy proxy)
-    {
-        bytes memory creationCode = type(SodiumProxy).creationCode;
+    function deployProxy(
+        address _singleton,
+        bytes memory initCode,
+        bytes32 salt
+    ) internal returns (address proxy) {
+        bytes memory creationCode = abi.encodePacked(
+            Wallet.creationCode,
+            uint256(uint160(_singleton))
+        );
         // solhint-disable-next-line no-inline-assembly
         assembly {
             proxy := create2(
@@ -24,28 +28,34 @@ contract SenderCreator {
             )
         }
         require(address(proxy) != address(0), "Create2 call failed");
-        proxy.setup(_singleton, initCode);
+        (bool success, ) = proxy.call(initCode);
+        require(success, "init wallet failed");
     }
 
-    function getAddress(bytes calldata initCode) external view returns (address) {
+    function getAddress(
+        bytes calldata initCode
+    ) external view returns (address) {
         bytes32 salt = bytes32(initCode[20:52]);
-        bytes32 hash = keccak256(
+        address singleton = address(bytes20(initCode[0:20]));
+        bytes memory creationCode = abi.encodePacked(
+            Wallet.creationCode,
+            uint256(uint160(singleton))
+        );
+        bytes32 has = keccak256(
             abi.encodePacked(
                 bytes1(0xff),
                 address(this),
                 salt,
-                keccak256(type(SodiumProxy).creationCode)
+                keccak256(creationCode)
             )
         );
-
         // NOTE: cast last 20 bytes of hash to address
-        return address(uint160(uint(hash)));
+        return address(uint160(uint(has)));
     }
 
-    function createSender(bytes calldata initCode)
-        external
-        returns (address sender)
-    {
+    function createSender(
+        bytes calldata initCode
+    ) external returns (address sender) {
         address singleton = address(bytes20(initCode[0:20]));
         bytes32 salt = bytes32(initCode[20:52]);
         bytes memory initCallData = initCode[52:];

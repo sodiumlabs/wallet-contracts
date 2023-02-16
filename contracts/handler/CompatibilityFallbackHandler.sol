@@ -4,11 +4,13 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./DefaultCallbackHandler.sol";
 import "../interfaces/ISignatureValidator.sol";
 import "../Sodium.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract CompatibilityFallbackHandler is
     DefaultCallbackHandler,
     ISignatureValidator
 {
+    using ECDSA for bytes32;
     //keccak256(
     //    "SafeMessage(bytes message)"
     //);
@@ -26,30 +28,25 @@ contract CompatibilityFallbackHandler is
      * @param _signature Signature byte array associated with _data
      * @return a bool upon valid or invalid signature with corresponding _data
      */
-    function isValidSignature(bytes calldata _data, bytes calldata _signature)
-        public
-        view
-        override
-        returns (bytes4)
-    {
-        // Caller should be a Safe
+    function isValidSignature(
+        bytes calldata _data,
+        bytes calldata _signature
+    ) public view override returns (bytes4) {
         Sodium so = Sodium(payable(msg.sender));
         bytes32 messageHash = getMessageHashForSodium(so, _data);
-
-        // TODO
-        // check signature is session owner
-
+        require(
+            so.isSessionOwner(messageHash.recover(_signature)),
+            "wallet: wrong signature"
+        );
         return EIP1271_MAGIC_VALUE;
     }
 
     /// @dev Returns hash of a message that can be signed by owners.
     /// @param message Message that should be hashed
     /// @return Message hash.
-    function getMessageHash(bytes memory message)
-        public
-        view
-        returns (bytes32)
-    {
+    function getMessageHash(
+        bytes memory message
+    ) public view returns (bytes32) {
         return getMessageHashForSodium(Sodium(payable(msg.sender)), message);
     }
 
@@ -57,11 +54,10 @@ contract CompatibilityFallbackHandler is
     /// @param so Sodium to which the message is targeted
     /// @param message Message that should be hashed
     /// @return Message hash.
-    function getMessageHashForSodium(Sodium so, bytes memory message)
-        public
-        view
-        returns (bytes32)
-    {
+    function getMessageHashForSodium(
+        Sodium so,
+        bytes memory message
+    ) public view returns (bytes32) {
         bytes32 safeMessageHash = keccak256(
             abi.encode(SAFE_MSG_TYPEHASH, keccak256(message))
         );
@@ -86,11 +82,10 @@ contract CompatibilityFallbackHandler is
      * @return a bool upon valid or invalid signature with corresponding _dataHash
      * @notice See https://github.com/gnosis/util-contracts/blob/bb5fe5fb5df6d8400998094fb1b32a178a47c3a1/contracts/StorageAccessible.sol
      */
-    function isValidSignature(bytes32 _dataHash, bytes calldata _signature)
-        external
-        view
-        returns (bytes4)
-    {
+    function isValidSignature(
+        bytes32 _dataHash,
+        bytes calldata _signature
+    ) external view returns (bytes4) {
         ISignatureValidator validator = ISignatureValidator(msg.sender);
         bytes4 value = validator.isValidSignature(
             abi.encode(_dataHash),

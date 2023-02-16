@@ -7,7 +7,7 @@ import "../interfaces/IStakeManager.sol";
 /* solhint-disable not-rely-on-time */
 /**
  * manage deposits and stakes.
- * deposit is just a balance used to pay for UserOperations (either by a paymaster or a wallet)
+ * deposit is just a balance used to pay for UserOperations (either by a paymaster or an account)
  * stake is value locked for at least "unstakeDelay" by a paymaster.
  */
 abstract contract StakeManager is IStakeManager {
@@ -17,6 +17,13 @@ abstract contract StakeManager is IStakeManager {
 
     function getDepositInfo(address account) public view returns (DepositInfo memory info) {
         return deposits[account];
+    }
+
+    // internal method to return just the stake info
+    function getStakeInfo(address addr) internal view returns (StakeInfo memory info) {
+        DepositInfo storage depositInfo = deposits[addr];
+        info.stake = depositInfo.stake;
+        info.unstakeDelaySec = depositInfo.unstakeDelaySec;
     }
 
     /// return the deposit (for gas payment) of the account

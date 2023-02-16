@@ -4,8 +4,10 @@ coverage
 coverage.json
 typechain
 typechain-types
-
+gen
 #Hardhat files
 cache
 artifacts
 build
+.secret
+.DS_Store

@@ -5,7 +5,9 @@ import {
   EntryPoint,
   Sodium,
   CompatibilityFallbackHandler,
-} from '../typechain'
+  TestCounter__factory,
+  TestCounter,
+} from '../gen/typechain'
 import {
   AddressZero,
   createWalletOwner,
@@ -14,38 +16,30 @@ import {
   ONE_ETH,
   TWO_ETH,
   deployEntryPoint,
-  createAddress, getWalletInitCode, deploySingleton, deployFallbackHandler, getWalletAddress
+  createAddress, getWalletInitCode, deploySingleton, deployFallbackHandler, getWalletAddress, callDataCost, deployContract
 } from './testutils';
-import { fillAndSign, getUserOpHash } from './UserOp';
-import { defaultAbiCoder, hexConcat, hexZeroPad, parseEther } from 'ethers/lib/utils';
-import { MockProvider, solidity } from 'ethereum-waffle';
+import { ContractFactory } from 'ethers';
+import { fillAndSign, fillUserOp, getUserOpHash, signUserOp } from './UserOp';
+import { arrayify, defaultAbiCoder, parseEther } from 'ethers/lib/utils';
 import '@nomicfoundation/hardhat-chai-matchers';
-import { ethers } from 'ethers';
+import { ethers } from "hardhat";
 import { zeroAddress } from 'ethereumjs-util';
+import TestCounterABI from '../artifacts/contracts/test/TestCounter.sol/TestCounter.json';
 
 describe('EntryPoint', function () {
   let entryPoint: EntryPoint
-  let entryPointView: EntryPoint
-  const provider = new MockProvider({
-    ganacheOptions: {
-      networkId: 1
-    }
-  });
+  const provider = ethers.provider;
   let walletOwner: Wallet
   let walletInitCode: string;
   let walletSingleton: Sodium;
   let fallbackHandler: CompatibilityFallbackHandler;
   const ethersSigner = provider.getSigner()
-
   const globalUnstakeDelaySec = 2
-  const paymasterStake = ethers.utils.parseEther('2')
 
   before(async function () {
-    entryPoint = await deployEntryPoint(paymasterStake, globalUnstakeDelaySec, provider)
-    // static call must come from address zero, to validate it can only be called off-chain.
-    entryPointView = entryPoint;
+    [entryPoint,] = await deployEntryPoint(provider);
     walletOwner = createWalletOwner(provider);
-    walletSingleton = await deploySingleton(provider);
+    walletSingleton = await deploySingleton(provider, entryPoint);
     fallbackHandler = await deployFallbackHandler(provider);
     walletInitCode = await getWalletInitCode(
       provider,
@@ -63,6 +57,74 @@ describe('EntryPoint', function () {
     }).then(n => n.chainId);
     const sampleOp = await fillAndSign({ sender: walletAddress, initCode: walletInitCode }, walletOwner, entryPoint)
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
+  })
+
+  describe('Transaction', () => {
+    let testCount: TestCounter
+    let walletInitCode2: string
+    let walletOwner: Wallet
+    let walletAddress: string;
+    before(async () => {
+      walletOwner = createWalletOwner(provider);
+      await fund(provider, walletOwner.address);
+      await fund(provider, await provider.getSigner().getAddress())
+      const i = await deployContract(provider.getSigner(), TestCounterABI)
+      testCount = TestCounter__factory.connect(i.address, provider);
+      walletInitCode2 = await getWalletInitCode(
+        provider,
+        entryPoint,
+        walletSingleton,
+        walletOwner.address,
+        "web",
+        fallbackHandler.address
+      );
+      walletAddress = await getWalletAddress(entryPoint, walletInitCode2);
+      await fund(provider, walletAddress);
+    });
+
+    it('should test count with init wallet', async () => {
+      const countABI = testCount.interface.encodeFunctionData("count");
+      const gasLimit = await testCount.estimateGas.count();
+
+      const execData = walletSingleton.connect(walletAddress).interface.encodeFunctionData("execute", [
+        [
+          {
+            op: 0,
+            revertOnError: true,
+            gasLimit: gasLimit,
+            target: testCount.address,
+            value: 0,
+            data: countABI
+          }
+        ]
+      ]);
+
+      let op = await fillUserOp({
+        sender: walletAddress,
+        initCode: walletInitCode2,
+        callData: execData,
+      }, entryPoint);
+
+      op.callGasLimit = gasLimit.add(callDataCost(execData)).add(gasLimit);
+      const opGasLimit = op.callGasLimit.add(2e7);
+      const w1 = createWalletOwner(provider);
+      op = signUserOp(op, walletOwner, entryPoint.address, await provider.getNetwork().then(n => n.chainId))
+      const receipt = await entryPoint.handleOps([
+        op,
+      ], walletAddress, {
+        gasLimit: opGasLimit
+      }).then(t => t.wait());
+      const result = await testCount.callStatic.counters(walletAddress).catch(rethrow())
+      const userOperationRevertReasonEvent = receipt.events?.find(event => event.event === 'UserOperationRevertReason')
+      if (userOperationRevertReasonEvent) {
+        expect(userOperationRevertReasonEvent?.event).to.equal('UserOperationRevertReason')
+        const revertReason = defaultAbiCoder.decode(['string'], '0x' + userOperationRevertReasonEvent?.args?.revertReason.substring(10)).toString()
+        console.debug("revertReason", revertReason);
+      }
+      expect(
+        result
+      ).to.equal(1);
+    });
   })
 
   describe('Stake Management', () => {
@@ -86,7 +148,7 @@ describe('EntryPoint', function () {
 
     describe('without stake', () => {
       it('should fail to stake too little delay', async () => {
-        await expect(entryPoint.callStatic.addStake(0).catch(rethrow())).to.revertedWith('must specify unstake delay')
+        await expect(entryPoint.callStatic.addStake(0)).to.revertedWith('must specify unstake delay')
       })
       it('should fail to unlock', async () => {
         await expect(entryPoint.callStatic.unlockStake().catch(rethrow())).to.revertedWith('not staked')
@@ -197,7 +259,7 @@ describe('EntryPoint', function () {
         nonce: 0,
         initCode: walletInitCode
       }, walletOwner1, entryPoint)
-      await expect(entryPointView.callStatic.simulateValidation(op).catch(rethrow())).to.revertedWithCustomError(entryPoint, "FailedOp").withArgs(0, zeroAddress(), "wallet: wrong signature")
+      await expect(entryPoint.callStatic.simulateValidation(op).catch(rethrow())).to.revertedWithCustomError(entryPoint, "FailedOp").withArgs(0, zeroAddress(), "wallet: wrong signature")
     })
 
     it('should succeed if validateUserOp succeeds', async () => {
@@ -208,11 +270,12 @@ describe('EntryPoint', function () {
         nonce: 0,
         initCode: walletInitCode,
       }, walletOwner, entryPoint);
-      console.debug(walletOwner.address, "sign address");
       await fund(provider, walletAddress);
       const chainId = await provider.getNetwork().then(n => n.chainId);
       expect(getUserOpHash(op, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(op))
-      await expect(entryPointView.callStatic.simulateValidation(op).catch(rethrow())).to.revertedWithCustomError(entryPointView, "SimulationResult");
+      await expect(
+        entryPoint.callStatic.simulateValidation(op).catch(rethrow())
+      ).to.revertedWithCustomError(entryPoint, "ValidationResult");
     })
   })
 })
