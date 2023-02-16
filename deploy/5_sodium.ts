@@ -9,6 +9,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const entryPoint = await deployments.get("EntryPoint");
     await deploy("Sodium", {
+        deterministicDeployment: true,
         from: deployer,
         args: [
             entryPoint.address

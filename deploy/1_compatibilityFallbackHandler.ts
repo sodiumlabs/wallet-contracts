@@ -10,7 +10,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await deploy("CompatibilityFallbackHandler", {
         from: deployer,
         autoMine: true,
-        log: true
+        log: true,
+        deterministicDeployment: true,
     })
 };
 export default func;

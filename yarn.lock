@@ -11,6 +11,7 @@ __metadata:
   dependencies:
     "@ethersproject/abi": ^5.4.7
     "@ethersproject/providers": ^5.4.7
+    "@gnosis.pm/safe-singleton-factory": ^1.0.11
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.4
     "@nomicfoundation/hardhat-network-helpers": ^1.0.0
     "@nomicfoundation/hardhat-toolbox": ^2.0.0
@@ -453,6 +454,13 @@ __metadata:
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
   checksum: 4059f790e2d07bf3c3ff3e0fec0daa8144fe35c1f6e0111c9921bd32106adaa97a4ab096ad7dab1e28ee6a9060083c4d1a4ada42a7f5f3f7a96b8812e2b757c1
+  languageName: node
+  linkType: hard
+
+"@gnosis.pm/safe-singleton-factory@npm:^1.0.11":
+  version: 1.0.12
+  resolution: "@gnosis.pm/safe-singleton-factory@npm:1.0.12"
+  checksum: f154c5ebf6bb8b5d5b2c3e5364bd741918a46140977109ada4584377c24f95843ed9c27039d1c729c4cf2b398cd10f2df27ba93624df49c381f294a83ff9ccd4
   languageName: node
   linkType: hard
 

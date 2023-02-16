@@ -14,13 +14,11 @@ import "../interfaces/IAggregatedAccount.sol";
 import "../interfaces/IEntryPoint.sol";
 import "./StakeManager.sol";
 import "./SenderCreator.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-
-contract EntryPoint is IEntryPoint, StakeManager, UUPSUpgradeable {
+contract EntryPoint is IEntryPoint, StakeManager {
     using UserOperationLib for UserOperation;
 
-    SenderCreator public senderCreator;
+    SenderCreator public immutable senderCreator;
 
     // internal value used during simulation: need to query aggregator.
     address private constant SIMULATE_FIND_AGGREGATOR = address(1);
@@ -34,8 +32,7 @@ contract EntryPoint is IEntryPoint, StakeManager, UUPSUpgradeable {
      */
     uint256 public constant SIG_VALIDATION_FAILED = 1;
 
-    function initialize(SenderCreator _senderCreator) initializer public {
-        __UUPSUpgradeable_init();
+    constructor(SenderCreator _senderCreator) {
         senderCreator = _senderCreator;
     }
 
@@ -872,9 +869,5 @@ contract EntryPoint is IEntryPoint, StakeManager, UUPSUpgradeable {
         assembly {
             mstore(0, number())
         }
-    }
-
-    function _authorizeUpgrade(address newImplementation) internal override {
-
     }
 }

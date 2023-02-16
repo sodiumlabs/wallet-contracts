@@ -15,22 +15,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // ]);
 
     await deploy("EntryPoint", {
+        deterministicDeployment: true,
         from: deployer,
         args: [
-
+            senderCreator.address
         ],
-        proxy: {
-            proxyArgs: ["{implementation}", "{data}"],
-            execute: {
-                init: {
-                    methodName: "initialize",
-                    args: [
-                        senderCreator.address
-                    ],
-                },
-            },
-            proxyContract: "ERC1967Proxy",
-        },
         autoMine: true,
         log: true
     })
