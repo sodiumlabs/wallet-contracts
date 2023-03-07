@@ -5,13 +5,14 @@ import {
   EntryPoint,
   Sodium,
   CompatibilityFallbackHandler,
-  CompatibilityFallbackHandler__factory
+  CompatibilityFallbackHandler__factory,
+  Sodium__factory
 } from '../gen/typechain'
 import {
   createWalletOwner,
   fund,
   deployEntryPoint,
-  getWalletInitCode, deploySingleton, deployFallbackHandler, getWalletAddress
+  getWalletInitCode, deploySingleton, deployFallbackHandler, getWalletAddress, deployDeployPaymaster
 } from './testutils';
 import { fillAndSign, getUserOpHash } from './UserOp';
 import '@nomicfoundation/hardhat-chai-matchers';
@@ -30,6 +31,9 @@ describe('Sodium', function () {
 
   before(async function () {
     [entryPoint,] = await deployEntryPoint(provider);
+    const ow = createWalletOwner(provider);
+    const deployPaymaster = await deployDeployPaymaster(provider, entryPoint, ow.address);
+    await fund(provider, deployPaymaster.address);
     walletOwner = createWalletOwner(provider);
     walletSingleton = await deploySingleton(provider, entryPoint);
     fallbackHandler = await deployFallbackHandler(provider);
@@ -42,13 +46,18 @@ describe('Sodium', function () {
       fallbackHandler.address
     );
     walletAddress = await getWalletAddress(entryPoint, walletInitCode);
-    await fund(provider, walletAddress);
     // sanity: validate helper functions
     const chainId = await provider.getNetwork().then((n) => {
       return n;
     }).then(n => n.chainId);
 
-    const sampleOp = await fillAndSign({ sender: walletAddress, initCode: walletInitCode }, walletOwner, entryPoint)
+    const sampleOp = await fillAndSign({ 
+      sender: walletAddress, 
+      initCode: walletInitCode,
+      paymasterAndData: deployPaymaster.address
+    }, walletOwner, entryPoint)
+
+    console.debug("sampleOp", sampleOp);
 
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
 
@@ -73,6 +82,39 @@ describe('Sodium', function () {
   describe('eth received', () => {
     it('allow receive native token', async () => {
       await fund(provider, walletSingleton.address);
+    })
+  })
+
+  describe('upgradeTo', () => {
+    it("dg call", async () => {
+      await fund(provider, walletAddress);
+      const newwalletSingleton = await deploySingleton(provider, entryPoint);
+      const so = Sodium__factory.connect(walletAddress, provider);
+      const abi = so.interface.encodeFunctionData("upgradeTo", [newwalletSingleton.address]);
+  
+      expect(newwalletSingleton.address.toLocaleLowerCase()).to.not.eq(walletSingleton.address.toLocaleLowerCase());
+  
+      const execData = walletSingleton.connect(walletAddress).interface.encodeFunctionData("execute", [
+        [
+          {
+            op: 0,
+            revertOnError: false,
+            gasLimit: 0,
+            value: 0,
+            target: walletAddress,
+            data: abi
+          }
+        ]
+      ]);
+  
+      const sampleOp = await fillAndSign({ sender: walletAddress, callData: execData, callGasLimit: 1e7 }, walletOwner, entryPoint)
+      const tx = await entryPoint.handleOps([
+        sampleOp,
+      ], walletAddress, {
+        gasLimit: 2e7
+      }).then(t => t.wait());
+      const va = await so.getSingleton();
+      expect(va.toLocaleLowerCase()).to.be.eq(newwalletSingleton.address.toLocaleLowerCase());
     })
   })
 })

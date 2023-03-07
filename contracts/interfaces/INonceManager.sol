@@ -3,13 +3,6 @@ pragma solidity >=0.7.0 <0.9.0;
 
 interface INonceManager {
     event NonceChange(uint256 _space, uint256 _newNonce);
-    
-    /**
-     * @notice Returns the next nonce of the default nonce space
-     * @dev The default nonce space is 0x00
-     * @return The next nonce
-     */
-    function nonce() external view returns (uint256);
 
     /**
      * @notice Returns the next nonce of the given nonce space

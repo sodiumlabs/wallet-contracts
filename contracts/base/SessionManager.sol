@@ -7,7 +7,8 @@ contract SessionManager is SelfAuthorized {
     event RemovedSession(address owner, bytes4 sessionKey);
 
     bytes4 internal constant sessionPlatformPC = bytes4(keccak256("pc"));
-    bytes4 internal constant sessionPlatformMobile = bytes4(keccak256("mobile"));
+    bytes4 internal constant sessionPlatformMobile =
+        bytes4(keccak256("mobile"));
     bytes4 internal constant sessionPlatformWeb = bytes4(keccak256("web"));
 
     // kecc256("pc|mobile|web") => session pubkey address

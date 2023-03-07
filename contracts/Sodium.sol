@@ -9,7 +9,7 @@ import "./common/Singleton.sol";
 import "./common/EtherPaymentFallback.sol";
 import "./interfaces/ISignatureValidator.sol";
 import "./external/GnosisSafeMath.sol";
-import "./eip4337/interfaces/IAccount.sol";
+import "./eip4337/core/BaseAccount.sol";
 import "./eip4337/interfaces/IEntryPoint.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./base/NonceManager.sol";
@@ -32,7 +32,7 @@ contract Sodium is
     ISignatureValidatorConstants,
     FallbackManager,
     GuardManager,
-    IAccount,
+    BaseAccount,
     EtherPaymentFallback
 {
     using ECDSA for bytes32;
@@ -53,13 +53,11 @@ contract Sodium is
     );
 
     bool private initialized;
-    address internal immutable entryPoint;
+    address public immutable _entryPoint;
 
     // This constructor ensures that this contract can only be used as a master copy for Proxy contracts
-    constructor(
-        IEntryPoint _entryPoint
-    ) {
-        entryPoint = address(_entryPoint);
+    constructor(IEntryPoint entryPoint) {
+        _entryPoint = address(entryPoint);
     }
 
     function setup(
@@ -74,9 +72,59 @@ contract Sodium is
         internalAddSession(_sessionOwner, _platform);
     }
 
+    /**
+     * @notice Returns the next nonce of the default nonce space
+     * @dev The default nonce space is 0x00
+     * @return The next nonce
+     */
+    function nonce() public view override returns (uint256) {
+        return readNonce(0);
+    }
+
+    function entryPoint() public view override returns (IEntryPoint) {
+        return IEntryPoint(_entryPoint);
+    }
+
+    function upgradeTo(Sodium newSingleton) external authorized {
+        require(newSingleton.isSodiumSingleton(), "Not a Sodium singleton");
+        _setSingleton(address(newSingleton));
+    }
+
+    /**
+     * validate the signature is valid for this message.
+     * @param userOp validate the userOp.signature field
+     * @param userOpHash convenient field: the hash of the request, to check the signature against
+     *          (also hashes the entrypoint and chain id)
+     * @return validationData signature and time-range of this operation
+     *      <20-byte> sigAuthorizer - 0 for valid signature, 1 to mark signature failure,
+     *         otherwise, an address of an "authorizer" contract.
+     *      <6-byte> validUntil - last timestamp this operation is valid. 0 for "indefinite"
+     *      <6-byte> validAfter - first timestamp this operation is valid
+     *      If the account doesn't use time-range, it is enough to return SIG_VALIDATION_FAILED value (1) for signature failure.
+     *      Note that the validation code cannot use block.timestamp (or block.number) directly.
+     */
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal override returns (uint256 validationData) {
+        // validate the signature is valid for this message.
+    }
+
+    /**
+     * validate the current nonce matches the UserOperation nonce.
+     * then it should update the account's state to prevent replay of this UserOperation.
+     * called only if initCode is empty (since "nonce" field is used as "salt" on account creation)
+     * @param userOp the op to validate.
+     */
+    function _validateAndUpdateNonce(
+        UserOperation calldata userOp
+    ) internal override {
+        // _validateNonce(userOp.nonce);
+    }
+
     function _requireFromAdmin() internal view {
         require(
-            msg.sender == address(this) || msg.sender == address(entryPoint),
+            msg.sender == address(this) || msg.sender == address(_entryPoint),
             "only entryPoint or wallet self"
         );
     }
@@ -129,30 +177,6 @@ contract Sodium is
                 }
             }
         }
-    }
-
-    function _payPrefund(uint256 missingAccountFunds) internal virtual {
-        if (missingAccountFunds != 0) {
-            (bool success,) = payable(msg.sender).call{value : missingAccountFunds, gas : type(uint256).max}("");
-            (success);
-            //ignore failure (its EntryPoint's job to verify, not account.)
-        }
-    }
-
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash,
-        address,
-        uint256 missingWalletFunds
-    ) external returns (uint256) {
-        _requireFromAdmin();
-        bytes32 signedHash = userOpHash.toEthSignedMessageHash();
-        // require(
-        //     isSessionOwner(signedHash.recover(userOp.signature)),
-        //     "wallet: wrong signature"
-        // );
-        _payPrefund(missingWalletFunds);
-        return 0;
     }
 
     /// @dev Returns the chain id used by this contract.

@@ -15,15 +15,6 @@ contract NonceManager is SelfAuthorized, INonceManager {
     bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);
 
     /**
-     * @notice Returns the next nonce of the default nonce space
-     * @dev The default nonce space is 0x00
-     * @return The next nonce
-     */
-    function nonce() external view returns (uint256) {
-        return readNonce(0);
-    }
-
-    /**
      * @notice Decodes a raw nonce
      * @dev A raw nonce is encoded using the first 160 bits for the space
      *  and the last 96 bits for the nonce
@@ -31,11 +22,9 @@ contract NonceManager is SelfAuthorized, INonceManager {
      * @return _space The nonce space of the raw nonce
      * @return _nonce The nonce of the raw nonce
      */
-    function _decodeNonce(uint256 _rawNonce)
-        private
-        pure
-        returns (uint256 _space, uint256 _nonce)
-    {
+    function _decodeNonce(
+        uint256 _rawNonce
+    ) private pure returns (uint256 _space, uint256 _nonce) {
         _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
         _space = _rawNonce >> NONCE_BITS;
     }
@@ -69,16 +58,13 @@ contract NonceManager is SelfAuthorized, INonceManager {
      * @dev A valid nonce must be above the last one used
      *   with a maximum delta of 100
      */
-    function _validateNonce(uint256 _rawNonce) private {
+    function _validateNonce(uint256 _rawNonce) internal {
         // Retrieve current nonce for this wallet
         (uint256 space, uint256 providedNonce) = _decodeNonce(_rawNonce);
         uint256 currentNonce = readNonce(space);
 
         // Verify if nonce is valid
-        require(
-            providedNonce == currentNonce,
-            "MainModule#_auth: INVALID_NONCE"
-        );
+        require(providedNonce == currentNonce, "INVALID_NONCE");
 
         // Update signature nonce
         uint256 newNonce = providedNonce + 1;

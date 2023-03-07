@@ -6,14 +6,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
-
     const senderCreator = await deployments.get("SenderCreator");
-
-    // const entryPointArtifact = await deployments.getArtifact("EntryPoint")
-    // const initializerData = getInitializerData(entryPointArtifact, [
-    //     senderCreator.address
-    // ]);
-
     await deploy("EntryPoint", {
         deterministicDeployment: true,
         from: deployer,

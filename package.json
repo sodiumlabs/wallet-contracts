@@ -1,6 +1,6 @@
 {
   "name": "@0xsodium/wallet-contracts",
-  "version": "0.0.4-beta",
+  "version": "0.0.6-beta",
   "description": "Sodium Smart Wallet contracts",
   "license": "MIT",
   "main": "gen/adapter/index.js",
@@ -9,7 +9,7 @@
     "./gen"
   ],
   "scripts": {
-    "dev": "hardhat node",
+    "dev": "rm -rf ./cache && rm -rf ./artifacts && hardhat node",
     "build": "hardhat compile && yarn type",
     "test": "NODE_ENV=test hardhat test",
     "type": "yarn type-build",

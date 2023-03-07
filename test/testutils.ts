@@ -9,7 +9,9 @@ import {
   CompatibilityFallbackHandler,
   CompatibilityFallbackHandler__factory,
   SenderCreator__factory,
-  SenderCreator
+  SenderCreator,
+  DeployPaymaster__factory,
+  DeployPaymaster
 } from '../gen/typechain';
 import { expect } from 'chai';
 import { debugTransaction } from './debugTx';
@@ -17,6 +19,7 @@ import { UserOperation } from './UserOperation';
 import EntryPointABI from '../artifacts/contracts/eip4337/core/EntryPoint.sol/EntryPoint.json';
 import SenderCreatorABI from '../artifacts/contracts/eip4337/core/SenderCreator.sol/SenderCreator.json';
 import SingletonABI from '../artifacts/contracts/Sodium.sol/Sodium.json';
+import DeployPaymasterABI from '../artifacts/contracts/paymaster/DeployPaymaster.sol/DeployPaymaster.json';
 import CompatibilityFallbackHandlerABI from '../artifacts/contracts/handler/CompatibilityFallbackHandler.sol/CompatibilityFallbackHandler.json';
 import { ethers, providers, ContractFactory, Signer, } from 'ethers';
 import { ContractJSON, isStandard } from './contract';
@@ -275,9 +278,9 @@ export async function deployEntryPoint(
 ): Promise<[EntryPoint, SenderCreator]> {
   const senderCreator = await deployContract(provider.getSigner(), SenderCreatorABI, []);
   const i = await deployContract(provider.getSigner(), EntryPointABI, [
+    senderCreator.address
   ]);
   const ep = EntryPoint__factory.connect(i.address, provider.getSigner());
-  await ep.initialize(senderCreator.address);
   return [
     ep,
     SenderCreator__factory.connect(senderCreator.address, provider)
@@ -292,6 +295,18 @@ export async function deploySingleton(
     entryPoint.address
   ]);
   return Sodium__factory.connect(i.address, provider.getSigner())
+}
+
+export async function deployDeployPaymaster(
+  provider: ethers.providers.JsonRpcProvider,
+  entryPoint: EntryPoint,
+  owner: string,
+): Promise<DeployPaymaster> {
+  const i = await deployContract(provider.getSigner(), DeployPaymasterABI, [
+    entryPoint.address,
+    owner
+  ]);
+  return DeployPaymaster__factory.connect(i.address, provider.getSigner())
 }
 
 export async function deployFallbackHandler(provider: ethers.providers.JsonRpcProvider): Promise<CompatibilityFallbackHandler> {

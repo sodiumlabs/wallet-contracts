@@ -1,0 +1,115 @@
+{
+  "address": "0x7a55948FCF36613CBD699f299BEce89F42581C92",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getSingleton",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "_imp",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isSodiumSingleton",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_imp",
+          "type": "address"
+        }
+      ],
+      "name": "upgradeTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x8b1d1677e55ceea810aedacf8298beee41e3f5efd1b2a0a84949f6d9524893a6",
+  "receipt": {
+    "to": "0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7",
+    "from": "0x17a243f7Dd13BadE0a7001Ad71a7ef4628A75fCB",
+    "contractAddress": null,
+    "transactionIndex": 51,
+    "gasUsed": "102776",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000008000000000000000000040000000000000000000000000000000000000800000000000400000000100000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000004000000000000000000001000000000000000000000000000000100000000000000000000000000000000800000000000000000000100000000000000000100000",
+    "blockHash": "0x385959dac048f0dacc06bac6747672699580e74d4291cd9dbd7764ab369a526f",
+    "transactionHash": "0x8b1d1677e55ceea810aedacf8298beee41e3f5efd1b2a0a84949f6d9524893a6",
+    "logs": [
+      {
+        "transactionIndex": 51,
+        "blockNumber": 40048215,
+        "transactionHash": "0x8b1d1677e55ceea810aedacf8298beee41e3f5efd1b2a0a84949f6d9524893a6",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x00000000000000000000000017a243f7dd13bade0a7001ad71a7ef4628a75fcb",
+          "0x0000000000000000000000007c7379531b2aee82e4ca06d4175d13b9cbeafd49"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000007de1052c3d5200000000000000000000000000000000000000000000000004db0b3b931d31f2800000000000000000000000000000000000000000001e923199bc6f2dd1048fd0000000000000000000000000000000000000000000000004da8d5a8df0f4a0800000000000000000000000000000000000000000001e92319a3a5032fd41e1d",
+        "logIndex": 262,
+        "blockHash": "0x385959dac048f0dacc06bac6747672699580e74d4291cd9dbd7764ab369a526f"
+      }
+    ],
+    "blockNumber": 40048215,
+    "cumulativeGasUsed": "10727352",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "83c51582ee67b079b63a960908c19d43",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getSingleton\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"_imp\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isSodiumSingleton\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_imp\",\"type\":\"address\"}],\"name\":\"upgradeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"getSingleton()\":{\"returns\":{\"_imp\":\"The address of the current Wallet implementation\"}},\"upgradeTo(address)\":{\"details\":\"The wallet implementation is stored on the storage slot   defined by the address of the wallet itself   WARNING updating this value may break the wallet and users   must be confident that the new implementation is safe.\",\"params\":{\"_imp\":\"New implementation address\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getSingleton()\":{\"notice\":\"Returns the Wallet implementation\"},\"upgradeTo(address)\":{\"notice\":\"Updates the Wallet implementation\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/temp.sol\":\"Temp\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/temp.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\ncontract Temp {\\n    /**\\n     * @notice Updates the Wallet implementation\\n     * @param _imp New implementation address\\n     * @dev The wallet implementation is stored on the storage slot\\n     *   defined by the address of the wallet itself\\n     *   WARNING updating this value may break the wallet and users\\n     *   must be confident that the new implementation is safe.\\n     */\\n    function upgradeTo(address _imp) external {\\n        assembly {\\n            sstore(address(), _imp)\\n        }\\n    }\\n\\n    /**\\n     * @notice Returns the Wallet implementation\\n     * @return _imp The address of the current Wallet implementation\\n     */\\n    function getSingleton() external view returns (address _imp) {\\n        assembly {\\n            _imp := sload(address())\\n        }\\n    }\\n\\n    function isSodiumSingleton() external pure returns (bool) {\\n        return true;\\n    }\\n}\",\"keccak256\":\"0xb6c405937e7a48478bf95d3f8a90db1e60130a49c5e1cc14481124a273c8dda5\",\"license\":\"LGPL-3.0-only\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5060e38061001f6000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c80633659cfe6146041578063a71d052b146052578063cb103d70146066575b600080fd5b6050604c366004607f565b3055565b005b604051600181526020015b60405180910390f35b30546040516001600160a01b039091168152602001605d565b600060208284031215609057600080fd5b81356001600160a01b038116811460a657600080fd5b939250505056fea2646970667358221220429403e4313fe68a3aae36b3f8da132cf577f410ff4280910dbd6668c0aff93c64736f6c63430008110033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c80633659cfe6146041578063a71d052b146052578063cb103d70146066575b600080fd5b6050604c366004607f565b3055565b005b604051600181526020015b60405180910390f35b30546040516001600160a01b039091168152602001605d565b600060208284031215609057600080fd5b81356001600160a01b038116811460a657600080fd5b939250505056fea2646970667358221220429403e4313fe68a3aae36b3f8da132cf577f410ff4280910dbd6668c0aff93c64736f6c63430008110033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "getSingleton()": {
+        "returns": {
+          "_imp": "The address of the current Wallet implementation"
+        }
+      },
+      "upgradeTo(address)": {
+        "details": "The wallet implementation is stored on the storage slot   defined by the address of the wallet itself   WARNING updating this value may break the wallet and users   must be confident that the new implementation is safe.",
+        "params": {
+          "_imp": "New implementation address"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "getSingleton()": {
+        "notice": "Returns the Wallet implementation"
+      },
+      "upgradeTo(address)": {
+        "notice": "Updates the Wallet implementation"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

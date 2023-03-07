@@ -1,0 +1,927 @@
+{
+  "address": "0x5754BDe51007daC3CADD085E6047e38E30249D1B",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IEntryPoint",
+          "name": "entryPoint",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes4",
+          "name": "sessionKey",
+          "type": "bytes4"
+        }
+      ],
+      "name": "AddedSession",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "handler",
+          "type": "address"
+        }
+      ],
+      "name": "ChangedFallbackHandler",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "guard",
+          "type": "address"
+        }
+      ],
+      "name": "ChangedGuard",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "DisabledModule",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "EnabledModule",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "ExecutionFromModuleFailure",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "ExecutionFromModuleSuccess",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "NativeTokenReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_space",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_newNonce",
+          "type": "uint256"
+        }
+      ],
+      "name": "NonceChange",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes4",
+          "name": "sessionKey",
+          "type": "bytes4"
+        }
+      ],
+      "name": "RemovedSession",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sessionOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes4",
+          "name": "platform",
+          "type": "bytes4"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "fallbackHandler",
+          "type": "address"
+        }
+      ],
+      "name": "SodiumSetup",
+      "type": "event"
+    },
+    {
+      "stateMutability": "nonpayable",
+      "type": "fallback"
+    },
+    {
+      "inputs": [],
+      "name": "VERSION",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_entryPoint",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "platform",
+          "type": "bytes4"
+        }
+      ],
+      "name": "addSession",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "prevModule",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "disableModule",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "domainSeparator",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "enableModule",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "entryPoint",
+      "outputs": [
+        {
+          "internalType": "contract IEntryPoint",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "enum Enum.Operation",
+          "name": "operation",
+          "type": "uint8"
+        }
+      ],
+      "name": "execTransactionFromModule",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "success",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "internalType": "enum Enum.Operation",
+          "name": "operation",
+          "type": "uint8"
+        }
+      ],
+      "name": "execTransactionFromModuleReturnData",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "success",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes",
+          "name": "returnData",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "enum Enum.Operation",
+              "name": "op",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "revertOnError",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "gasLimit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct Transaction[]",
+          "name": "_txs",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "execute",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getChainId",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSessionOwners",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSingleton",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "_imp",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "module",
+          "type": "address"
+        }
+      ],
+      "name": "isModuleEnabled",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "isSessionOwner",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isSodiumSingleton",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "nonce",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_space",
+          "type": "uint256"
+        }
+      ],
+      "name": "readNonce",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "platform",
+          "type": "bytes4"
+        }
+      ],
+      "name": "removeSession",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "handler",
+          "type": "address"
+        }
+      ],
+      "name": "setFallbackHandler",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "guard",
+          "type": "address"
+        }
+      ],
+      "name": "setGuard",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_sessionOwner",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes4",
+          "name": "_platform",
+          "type": "bytes4"
+        },
+        {
+          "internalType": "address",
+          "name": "_fallbackHandler",
+          "type": "address"
+        }
+      ],
+      "name": "setup",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "setupModules",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract Sodium",
+          "name": "newSingleton",
+          "type": "address"
+        }
+      ],
+      "name": "upgradeTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "nonce",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "initCode",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes",
+              "name": "callData",
+              "type": "bytes"
+            },
+            {
+              "internalType": "uint256",
+              "name": "callGasLimit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "verificationGasLimit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "preVerificationGas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxFeePerGas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxPriorityFeePerGas",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "paymasterAndData",
+              "type": "bytes"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct UserOperation",
+          "name": "userOp",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "userOpHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "missingAccountFunds",
+          "type": "uint256"
+        }
+      ],
+      "name": "validateUserOp",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "validationData",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "transactionHash": "0x32306ac56b97dd4e045016a147995121928b244b27037e4213374da375f681f3",
+  "receipt": {
+    "to": "0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7",
+    "from": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "contractAddress": null,
+    "transactionIndex": 0,
+    "gasUsed": "1564668",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x602a46880561d9cd0ea9cb3b7c64bd17d94c1aff84000f9f5629c13cfc0fd5bd",
+    "transactionHash": "0x32306ac56b97dd4e045016a147995121928b244b27037e4213374da375f681f3",
+    "logs": [],
+    "blockNumber": 17,
+    "cumulativeGasUsed": "1564668",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xDCa3e88DE9f6A2d55917d1DFE0C81aEDD363c0f9"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "e36723426982162f94f91f49468ecdec",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IEntryPoint\",\"name\":\"entryPoint\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes4\",\"name\":\"sessionKey\",\"type\":\"bytes4\"}],\"name\":\"AddedSession\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"handler\",\"type\":\"address\"}],\"name\":\"ChangedFallbackHandler\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"guard\",\"type\":\"address\"}],\"name\":\"ChangedGuard\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"DisabledModule\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"EnabledModule\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"ExecutionFromModuleFailure\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"ExecutionFromModuleSuccess\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"NativeTokenReceived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_space\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newNonce\",\"type\":\"uint256\"}],\"name\":\"NonceChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes4\",\"name\":\"sessionKey\",\"type\":\"bytes4\"}],\"name\":\"RemovedSession\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sessionOwner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes4\",\"name\":\"platform\",\"type\":\"bytes4\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"fallbackHandler\",\"type\":\"address\"}],\"name\":\"SodiumSetup\",\"type\":\"event\"},{\"stateMutability\":\"nonpayable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_entryPoint\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"bytes4\",\"name\":\"platform\",\"type\":\"bytes4\"}],\"name\":\"addSession\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"prevModule\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"disableModule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"domainSeparator\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"enableModule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"entryPoint\",\"outputs\":[{\"internalType\":\"contract IEntryPoint\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"enum Enum.Operation\",\"name\":\"operation\",\"type\":\"uint8\"}],\"name\":\"execTransactionFromModule\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"},{\"internalType\":\"enum Enum.Operation\",\"name\":\"operation\",\"type\":\"uint8\"}],\"name\":\"execTransactionFromModuleReturnData\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"success\",\"type\":\"bool\"},{\"internalType\":\"bytes\",\"name\":\"returnData\",\"type\":\"bytes\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"enum Enum.Operation\",\"name\":\"op\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"revertOnError\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"gasLimit\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"struct Transaction[]\",\"name\":\"_txs\",\"type\":\"tuple[]\"}],\"name\":\"execute\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getChainId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSessionOwners\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSingleton\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"_imp\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"module\",\"type\":\"address\"}],\"name\":\"isModuleEnabled\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"isSessionOwner\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isSodiumSingleton\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"nonce\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_space\",\"type\":\"uint256\"}],\"name\":\"readNonce\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"bytes4\",\"name\":\"platform\",\"type\":\"bytes4\"}],\"name\":\"removeSession\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"handler\",\"type\":\"address\"}],\"name\":\"setFallbackHandler\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"guard\",\"type\":\"address\"}],\"name\":\"setGuard\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_sessionOwner\",\"type\":\"address\"},{\"internalType\":\"bytes4\",\"name\":\"_platform\",\"type\":\"bytes4\"},{\"internalType\":\"address\",\"name\":\"_fallbackHandler\",\"type\":\"address\"}],\"name\":\"setup\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"setupModules\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract Sodium\",\"name\":\"newSingleton\",\"type\":\"address\"}],\"name\":\"upgradeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"initCode\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"callData\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"callGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"verificationGasLimit\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"preVerificationGas\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxFeePerGas\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"maxPriorityFeePerGas\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"paymasterAndData\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"signature\",\"type\":\"bytes\"}],\"internalType\":\"struct UserOperation\",\"name\":\"userOp\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"userOpHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"missingAccountFunds\",\"type\":\"uint256\"}],\"name\":\"validateUserOp\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"validationData\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"disableModule(address,address)\":{\"details\":\"Allows to remove a module from the whitelist.      This can only be done via a Safe transaction.\",\"params\":{\"module\":\"Module to be removed.\",\"prevModule\":\"Module that pointed to the module to be removed in the linked list\"}},\"enableModule(address)\":{\"details\":\"Allows to add a module to the whitelist.      This can only be done via a Safe transaction.\",\"params\":{\"module\":\"Module to be whitelisted.\"}},\"execTransactionFromModule(address,uint256,bytes,uint8)\":{\"details\":\"Allows a Module to execute a Safe transaction without any further confirmations.\",\"params\":{\"data\":\"Data payload of module transaction.\",\"operation\":\"Operation type of module transaction.\",\"to\":\"Destination address of module transaction.\",\"value\":\"Ether value of module transaction.\"}},\"execTransactionFromModuleReturnData(address,uint256,bytes,uint8)\":{\"details\":\"Allows a Module to execute a Safe transaction without any further confirmations and return data\",\"params\":{\"data\":\"Data payload of module transaction.\",\"operation\":\"Operation type of module transaction.\",\"to\":\"Destination address of module transaction.\",\"value\":\"Ether value of module transaction.\"}},\"execute((uint8,bool,uint256,address,uint256,bytes)[])\":{\"details\":\"Relayers must ensure that the gasLimit specified for each transaction      is acceptable to them. A user could specify large enough that it could      consume all the gas available.\",\"params\":{\"_txs\":\"Transactions to process\"}},\"getChainId()\":{\"details\":\"Returns the chain id used by this contract.\"},\"getSessionOwners()\":{\"details\":\"Returns array of owners.\",\"returns\":{\"_0\":\"Array of session owners.\"}},\"getSingleton()\":{\"returns\":{\"_imp\":\"The address of the current Wallet implementation\"}},\"isModuleEnabled(address)\":{\"details\":\"Returns if an module is enabled\",\"returns\":{\"_0\":\"True if the module is enabled\"}},\"nonce()\":{\"details\":\"The default nonce space is 0x00\",\"returns\":{\"_0\":\"The next nonce\"}},\"readNonce(uint256)\":{\"params\":{\"_space\":\"Nonce space, each space keeps an independent nonce count\"},\"returns\":{\"_0\":\"The next nonce\"}},\"setFallbackHandler(address)\":{\"details\":\"Allows to add a contract to handle fallback calls.      Only fallback calls without value and with data will be forwarded.      This can only be done via a Safe transaction.\",\"params\":{\"handler\":\"contract to handle fallbacks calls.\"}},\"setGuard(address)\":{\"details\":\"Set a guard that checks transactions before execution\",\"params\":{\"guard\":\"The address of the guard to be used or the 0 address to disable the guard\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"disableModule(address,address)\":{\"notice\":\"Disables the module `module` for the Safe.\"},\"enableModule(address)\":{\"notice\":\"Enables the module `module` for the Safe.\"},\"entryPoint()\":{\"notice\":\"return the entryPoint used by this account. subclass should return the current entryPoint used by this account.\"},\"execute((uint8,bool,uint256,address,uint256,bytes)[])\":{\"notice\":\"Allow eip-4337 entryPoint or wallet self to execute an action\"},\"getSingleton()\":{\"notice\":\"Returns the Wallet implementation\"},\"nonce()\":{\"notice\":\"Returns the next nonce of the default nonce space\"},\"readNonce(uint256)\":{\"notice\":\"Returns the next nonce of the given nonce space\"},\"validateUserOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)\":{\"notice\":\"Validate user's signature and nonce. subclass doesn't need to override this method. Instead, it should override the specific internal validation methods.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Sodium.sol\":\"Sodium\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/utils/Strings.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.8.0) (utils/Strings.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"./math/Math.sol\\\";\\n\\n/**\\n * @dev String operations.\\n */\\nlibrary Strings {\\n    bytes16 private constant _SYMBOLS = \\\"0123456789abcdef\\\";\\n    uint8 private constant _ADDRESS_LENGTH = 20;\\n\\n    /**\\n     * @dev Converts a `uint256` to its ASCII `string` decimal representation.\\n     */\\n    function toString(uint256 value) internal pure returns (string memory) {\\n        unchecked {\\n            uint256 length = Math.log10(value) + 1;\\n            string memory buffer = new string(length);\\n            uint256 ptr;\\n            /// @solidity memory-safe-assembly\\n            assembly {\\n                ptr := add(buffer, add(32, length))\\n            }\\n            while (true) {\\n                ptr--;\\n                /// @solidity memory-safe-assembly\\n                assembly {\\n                    mstore8(ptr, byte(mod(value, 10), _SYMBOLS))\\n                }\\n                value /= 10;\\n                if (value == 0) break;\\n            }\\n            return buffer;\\n        }\\n    }\\n\\n    /**\\n     * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation.\\n     */\\n    function toHexString(uint256 value) internal pure returns (string memory) {\\n        unchecked {\\n            return toHexString(value, Math.log256(value) + 1);\\n        }\\n    }\\n\\n    /**\\n     * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation with fixed length.\\n     */\\n    function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {\\n        bytes memory buffer = new bytes(2 * length + 2);\\n        buffer[0] = \\\"0\\\";\\n        buffer[1] = \\\"x\\\";\\n        for (uint256 i = 2 * length + 1; i > 1; --i) {\\n            buffer[i] = _SYMBOLS[value & 0xf];\\n            value >>= 4;\\n        }\\n        require(value == 0, \\\"Strings: hex length insufficient\\\");\\n        return string(buffer);\\n    }\\n\\n    /**\\n     * @dev Converts an `address` with fixed length of 20 bytes to its not checksummed ASCII `string` hexadecimal representation.\\n     */\\n    function toHexString(address addr) internal pure returns (string memory) {\\n        return toHexString(uint256(uint160(addr)), _ADDRESS_LENGTH);\\n    }\\n}\\n\",\"keccak256\":\"0xa4d1d62251f8574deb032a35fc948386a9b4de74b812d4f545a1ac120486b48a\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/cryptography/ECDSA.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/ECDSA.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../Strings.sol\\\";\\n\\n/**\\n * @dev Elliptic Curve Digital Signature Algorithm (ECDSA) operations.\\n *\\n * These functions can be used to verify that a message was signed by the holder\\n * of the private keys of a given address.\\n */\\nlibrary ECDSA {\\n    enum RecoverError {\\n        NoError,\\n        InvalidSignature,\\n        InvalidSignatureLength,\\n        InvalidSignatureS,\\n        InvalidSignatureV // Deprecated in v4.8\\n    }\\n\\n    function _throwError(RecoverError error) private pure {\\n        if (error == RecoverError.NoError) {\\n            return; // no error: do nothing\\n        } else if (error == RecoverError.InvalidSignature) {\\n            revert(\\\"ECDSA: invalid signature\\\");\\n        } else if (error == RecoverError.InvalidSignatureLength) {\\n            revert(\\\"ECDSA: invalid signature length\\\");\\n        } else if (error == RecoverError.InvalidSignatureS) {\\n            revert(\\\"ECDSA: invalid signature 's' value\\\");\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the address that signed a hashed message (`hash`) with\\n     * `signature` or error string. This address can then be used for verification purposes.\\n     *\\n     * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:\\n     * this function rejects them by requiring the `s` value to be in the lower\\n     * half order, and the `v` value to be either 27 or 28.\\n     *\\n     * IMPORTANT: `hash` _must_ be the result of a hash operation for the\\n     * verification to be secure: it is possible to craft signatures that\\n     * recover to arbitrary addresses for non-hashed data. A safe way to ensure\\n     * this is by receiving a hash of the original message (which may otherwise\\n     * be too long), and then calling {toEthSignedMessageHash} on it.\\n     *\\n     * Documentation for signature generation:\\n     * - with https://web3js.readthedocs.io/en/v1.3.4/web3-eth-accounts.html#sign[Web3.js]\\n     * - with https://docs.ethers.io/v5/api/signer/#Signer-signMessage[ethers]\\n     *\\n     * _Available since v4.3._\\n     */\\n    function tryRecover(bytes32 hash, bytes memory signature) internal pure returns (address, RecoverError) {\\n        if (signature.length == 65) {\\n            bytes32 r;\\n            bytes32 s;\\n            uint8 v;\\n            // ecrecover takes the signature parameters, and the only way to get them\\n            // currently is to use assembly.\\n            /// @solidity memory-safe-assembly\\n            assembly {\\n                r := mload(add(signature, 0x20))\\n                s := mload(add(signature, 0x40))\\n                v := byte(0, mload(add(signature, 0x60)))\\n            }\\n            return tryRecover(hash, v, r, s);\\n        } else {\\n            return (address(0), RecoverError.InvalidSignatureLength);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the address that signed a hashed message (`hash`) with\\n     * `signature`. This address can then be used for verification purposes.\\n     *\\n     * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:\\n     * this function rejects them by requiring the `s` value to be in the lower\\n     * half order, and the `v` value to be either 27 or 28.\\n     *\\n     * IMPORTANT: `hash` _must_ be the result of a hash operation for the\\n     * verification to be secure: it is possible to craft signatures that\\n     * recover to arbitrary addresses for non-hashed data. A safe way to ensure\\n     * this is by receiving a hash of the original message (which may otherwise\\n     * be too long), and then calling {toEthSignedMessageHash} on it.\\n     */\\n    function recover(bytes32 hash, bytes memory signature) internal pure returns (address) {\\n        (address recovered, RecoverError error) = tryRecover(hash, signature);\\n        _throwError(error);\\n        return recovered;\\n    }\\n\\n    /**\\n     * @dev Overload of {ECDSA-tryRecover} that receives the `r` and `vs` short-signature fields separately.\\n     *\\n     * See https://eips.ethereum.org/EIPS/eip-2098[EIP-2098 short signatures]\\n     *\\n     * _Available since v4.3._\\n     */\\n    function tryRecover(\\n        bytes32 hash,\\n        bytes32 r,\\n        bytes32 vs\\n    ) internal pure returns (address, RecoverError) {\\n        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);\\n        uint8 v = uint8((uint256(vs) >> 255) + 27);\\n        return tryRecover(hash, v, r, s);\\n    }\\n\\n    /**\\n     * @dev Overload of {ECDSA-recover} that receives the `r and `vs` short-signature fields separately.\\n     *\\n     * _Available since v4.2._\\n     */\\n    function recover(\\n        bytes32 hash,\\n        bytes32 r,\\n        bytes32 vs\\n    ) internal pure returns (address) {\\n        (address recovered, RecoverError error) = tryRecover(hash, r, vs);\\n        _throwError(error);\\n        return recovered;\\n    }\\n\\n    /**\\n     * @dev Overload of {ECDSA-tryRecover} that receives the `v`,\\n     * `r` and `s` signature fields separately.\\n     *\\n     * _Available since v4.3._\\n     */\\n    function tryRecover(\\n        bytes32 hash,\\n        uint8 v,\\n        bytes32 r,\\n        bytes32 s\\n    ) internal pure returns (address, RecoverError) {\\n        // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature\\n        // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines\\n        // the valid range for s in (301): 0 < s < secp256k1n \\u00f7 2 + 1, and for v in (302): v \\u2208 {27, 28}. Most\\n        // signatures from current libraries generate a unique signature with an s-value in the lower half order.\\n        //\\n        // If your library generates malleable signatures, such as s-values in the upper range, calculate a new s-value\\n        // with 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - s1 and flip v from 27 to 28 or\\n        // vice versa. If your library also generates signatures with 0/1 for v instead 27/28, add 27 to v to accept\\n        // these malleable signatures as well.\\n        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {\\n            return (address(0), RecoverError.InvalidSignatureS);\\n        }\\n\\n        // If the signature is valid (and not malleable), return the signer address\\n        address signer = ecrecover(hash, v, r, s);\\n        if (signer == address(0)) {\\n            return (address(0), RecoverError.InvalidSignature);\\n        }\\n\\n        return (signer, RecoverError.NoError);\\n    }\\n\\n    /**\\n     * @dev Overload of {ECDSA-recover} that receives the `v`,\\n     * `r` and `s` signature fields separately.\\n     */\\n    function recover(\\n        bytes32 hash,\\n        uint8 v,\\n        bytes32 r,\\n        bytes32 s\\n    ) internal pure returns (address) {\\n        (address recovered, RecoverError error) = tryRecover(hash, v, r, s);\\n        _throwError(error);\\n        return recovered;\\n    }\\n\\n    /**\\n     * @dev Returns an Ethereum Signed Message, created from a `hash`. This\\n     * produces hash corresponding to the one signed with the\\n     * https://eth.wiki/json-rpc/API#eth_sign[`eth_sign`]\\n     * JSON-RPC method as part of EIP-191.\\n     *\\n     * See {recover}.\\n     */\\n    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {\\n        // 32 is the length in bytes of hash,\\n        // enforced by the type signature above\\n        return keccak256(abi.encodePacked(\\\"\\\\x19Ethereum Signed Message:\\\\n32\\\", hash));\\n    }\\n\\n    /**\\n     * @dev Returns an Ethereum Signed Message, created from `s`. This\\n     * produces hash corresponding to the one signed with the\\n     * https://eth.wiki/json-rpc/API#eth_sign[`eth_sign`]\\n     * JSON-RPC method as part of EIP-191.\\n     *\\n     * See {recover}.\\n     */\\n    function toEthSignedMessageHash(bytes memory s) internal pure returns (bytes32) {\\n        return keccak256(abi.encodePacked(\\\"\\\\x19Ethereum Signed Message:\\\\n\\\", Strings.toString(s.length), s));\\n    }\\n\\n    /**\\n     * @dev Returns an Ethereum Signed Typed Data, created from a\\n     * `domainSeparator` and a `structHash`. This produces hash corresponding\\n     * to the one signed with the\\n     * https://eips.ethereum.org/EIPS/eip-712[`eth_signTypedData`]\\n     * JSON-RPC method as part of EIP-712.\\n     *\\n     * See {recover}.\\n     */\\n    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32) {\\n        return keccak256(abi.encodePacked(\\\"\\\\x19\\\\x01\\\", domainSeparator, structHash));\\n    }\\n}\\n\",\"keccak256\":\"0xda898fa084aa1ddfdb346e6a40459e00a59d87071cce7c315a46d648dd71d0ba\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/math/Math.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.8.0) (utils/math/Math.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Standard math utilities missing in the Solidity language.\\n */\\nlibrary Math {\\n    enum Rounding {\\n        Down, // Toward negative infinity\\n        Up, // Toward infinity\\n        Zero // Toward zero\\n    }\\n\\n    /**\\n     * @dev Returns the largest of two numbers.\\n     */\\n    function max(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a > b ? a : b;\\n    }\\n\\n    /**\\n     * @dev Returns the smallest of two numbers.\\n     */\\n    function min(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a < b ? a : b;\\n    }\\n\\n    /**\\n     * @dev Returns the average of two numbers. The result is rounded towards\\n     * zero.\\n     */\\n    function average(uint256 a, uint256 b) internal pure returns (uint256) {\\n        // (a + b) / 2 can overflow.\\n        return (a & b) + (a ^ b) / 2;\\n    }\\n\\n    /**\\n     * @dev Returns the ceiling of the division of two numbers.\\n     *\\n     * This differs from standard division with `/` in that it rounds up instead\\n     * of rounding down.\\n     */\\n    function ceilDiv(uint256 a, uint256 b) internal pure returns (uint256) {\\n        // (a + b - 1) / b can overflow on addition, so we distribute.\\n        return a == 0 ? 0 : (a - 1) / b + 1;\\n    }\\n\\n    /**\\n     * @notice Calculates floor(x * y / denominator) with full precision. Throws if result overflows a uint256 or denominator == 0\\n     * @dev Original credit to Remco Bloemen under MIT license (https://xn--2-umb.com/21/muldiv)\\n     * with further edits by Uniswap Labs also under MIT license.\\n     */\\n    function mulDiv(\\n        uint256 x,\\n        uint256 y,\\n        uint256 denominator\\n    ) internal pure returns (uint256 result) {\\n        unchecked {\\n            // 512-bit multiply [prod1 prod0] = x * y. Compute the product mod 2^256 and mod 2^256 - 1, then use\\n            // use the Chinese Remainder Theorem to reconstruct the 512 bit result. The result is stored in two 256\\n            // variables such that product = prod1 * 2^256 + prod0.\\n            uint256 prod0; // Least significant 256 bits of the product\\n            uint256 prod1; // Most significant 256 bits of the product\\n            assembly {\\n                let mm := mulmod(x, y, not(0))\\n                prod0 := mul(x, y)\\n                prod1 := sub(sub(mm, prod0), lt(mm, prod0))\\n            }\\n\\n            // Handle non-overflow cases, 256 by 256 division.\\n            if (prod1 == 0) {\\n                return prod0 / denominator;\\n            }\\n\\n            // Make sure the result is less than 2^256. Also prevents denominator == 0.\\n            require(denominator > prod1);\\n\\n            ///////////////////////////////////////////////\\n            // 512 by 256 division.\\n            ///////////////////////////////////////////////\\n\\n            // Make division exact by subtracting the remainder from [prod1 prod0].\\n            uint256 remainder;\\n            assembly {\\n                // Compute remainder using mulmod.\\n                remainder := mulmod(x, y, denominator)\\n\\n                // Subtract 256 bit number from 512 bit number.\\n                prod1 := sub(prod1, gt(remainder, prod0))\\n                prod0 := sub(prod0, remainder)\\n            }\\n\\n            // Factor powers of two out of denominator and compute largest power of two divisor of denominator. Always >= 1.\\n            // See https://cs.stackexchange.com/q/138556/92363.\\n\\n            // Does not overflow because the denominator cannot be zero at this stage in the function.\\n            uint256 twos = denominator & (~denominator + 1);\\n            assembly {\\n                // Divide denominator by twos.\\n                denominator := div(denominator, twos)\\n\\n                // Divide [prod1 prod0] by twos.\\n                prod0 := div(prod0, twos)\\n\\n                // Flip twos such that it is 2^256 / twos. If twos is zero, then it becomes one.\\n                twos := add(div(sub(0, twos), twos), 1)\\n            }\\n\\n            // Shift in bits from prod1 into prod0.\\n            prod0 |= prod1 * twos;\\n\\n            // Invert denominator mod 2^256. Now that denominator is an odd number, it has an inverse modulo 2^256 such\\n            // that denominator * inv = 1 mod 2^256. Compute the inverse by starting with a seed that is correct for\\n            // four bits. That is, denominator * inv = 1 mod 2^4.\\n            uint256 inverse = (3 * denominator) ^ 2;\\n\\n            // Use the Newton-Raphson iteration to improve the precision. Thanks to Hensel's lifting lemma, this also works\\n            // in modular arithmetic, doubling the correct bits in each step.\\n            inverse *= 2 - denominator * inverse; // inverse mod 2^8\\n            inverse *= 2 - denominator * inverse; // inverse mod 2^16\\n            inverse *= 2 - denominator * inverse; // inverse mod 2^32\\n            inverse *= 2 - denominator * inverse; // inverse mod 2^64\\n            inverse *= 2 - denominator * inverse; // inverse mod 2^128\\n            inverse *= 2 - denominator * inverse; // inverse mod 2^256\\n\\n            // Because the division is now exact we can divide by multiplying with the modular inverse of denominator.\\n            // This will give us the correct result modulo 2^256. Since the preconditions guarantee that the outcome is\\n            // less than 2^256, this is the final result. We don't need to compute the high bits of the result and prod1\\n            // is no longer required.\\n            result = prod0 * inverse;\\n            return result;\\n        }\\n    }\\n\\n    /**\\n     * @notice Calculates x * y / denominator with full precision, following the selected rounding direction.\\n     */\\n    function mulDiv(\\n        uint256 x,\\n        uint256 y,\\n        uint256 denominator,\\n        Rounding rounding\\n    ) internal pure returns (uint256) {\\n        uint256 result = mulDiv(x, y, denominator);\\n        if (rounding == Rounding.Up && mulmod(x, y, denominator) > 0) {\\n            result += 1;\\n        }\\n        return result;\\n    }\\n\\n    /**\\n     * @dev Returns the square root of a number. If the number is not a perfect square, the value is rounded down.\\n     *\\n     * Inspired by Henry S. Warren, Jr.'s \\\"Hacker's Delight\\\" (Chapter 11).\\n     */\\n    function sqrt(uint256 a) internal pure returns (uint256) {\\n        if (a == 0) {\\n            return 0;\\n        }\\n\\n        // For our first guess, we get the biggest power of 2 which is smaller than the square root of the target.\\n        //\\n        // We know that the \\\"msb\\\" (most significant bit) of our target number `a` is a power of 2 such that we have\\n        // `msb(a) <= a < 2*msb(a)`. This value can be written `msb(a)=2**k` with `k=log2(a)`.\\n        //\\n        // This can be rewritten `2**log2(a) <= a < 2**(log2(a) + 1)`\\n        // \\u2192 `sqrt(2**k) <= sqrt(a) < sqrt(2**(k+1))`\\n        // \\u2192 `2**(k/2) <= sqrt(a) < 2**((k+1)/2) <= 2**(k/2 + 1)`\\n        //\\n        // Consequently, `2**(log2(a) / 2)` is a good first approximation of `sqrt(a)` with at least 1 correct bit.\\n        uint256 result = 1 << (log2(a) >> 1);\\n\\n        // At this point `result` is an estimation with one bit of precision. We know the true value is a uint128,\\n        // since it is the square root of a uint256. Newton's method converges quadratically (precision doubles at\\n        // every iteration). We thus need at most 7 iteration to turn our partial result with one bit of precision\\n        // into the expected uint128 result.\\n        unchecked {\\n            result = (result + a / result) >> 1;\\n            result = (result + a / result) >> 1;\\n            result = (result + a / result) >> 1;\\n            result = (result + a / result) >> 1;\\n            result = (result + a / result) >> 1;\\n            result = (result + a / result) >> 1;\\n            result = (result + a / result) >> 1;\\n            return min(result, a / result);\\n        }\\n    }\\n\\n    /**\\n     * @notice Calculates sqrt(a), following the selected rounding direction.\\n     */\\n    function sqrt(uint256 a, Rounding rounding) internal pure returns (uint256) {\\n        unchecked {\\n            uint256 result = sqrt(a);\\n            return result + (rounding == Rounding.Up && result * result < a ? 1 : 0);\\n        }\\n    }\\n\\n    /**\\n     * @dev Return the log in base 2, rounded down, of a positive value.\\n     * Returns 0 if given 0.\\n     */\\n    function log2(uint256 value) internal pure returns (uint256) {\\n        uint256 result = 0;\\n        unchecked {\\n            if (value >> 128 > 0) {\\n                value >>= 128;\\n                result += 128;\\n            }\\n            if (value >> 64 > 0) {\\n                value >>= 64;\\n                result += 64;\\n            }\\n            if (value >> 32 > 0) {\\n                value >>= 32;\\n                result += 32;\\n            }\\n            if (value >> 16 > 0) {\\n                value >>= 16;\\n                result += 16;\\n            }\\n            if (value >> 8 > 0) {\\n                value >>= 8;\\n                result += 8;\\n            }\\n            if (value >> 4 > 0) {\\n                value >>= 4;\\n                result += 4;\\n            }\\n            if (value >> 2 > 0) {\\n                value >>= 2;\\n                result += 2;\\n            }\\n            if (value >> 1 > 0) {\\n                result += 1;\\n            }\\n        }\\n        return result;\\n    }\\n\\n    /**\\n     * @dev Return the log in base 2, following the selected rounding direction, of a positive value.\\n     * Returns 0 if given 0.\\n     */\\n    function log2(uint256 value, Rounding rounding) internal pure returns (uint256) {\\n        unchecked {\\n            uint256 result = log2(value);\\n            return result + (rounding == Rounding.Up && 1 << result < value ? 1 : 0);\\n        }\\n    }\\n\\n    /**\\n     * @dev Return the log in base 10, rounded down, of a positive value.\\n     * Returns 0 if given 0.\\n     */\\n    function log10(uint256 value) internal pure returns (uint256) {\\n        uint256 result = 0;\\n        unchecked {\\n            if (value >= 10**64) {\\n                value /= 10**64;\\n                result += 64;\\n            }\\n            if (value >= 10**32) {\\n                value /= 10**32;\\n                result += 32;\\n            }\\n            if (value >= 10**16) {\\n                value /= 10**16;\\n                result += 16;\\n            }\\n            if (value >= 10**8) {\\n                value /= 10**8;\\n                result += 8;\\n            }\\n            if (value >= 10**4) {\\n                value /= 10**4;\\n                result += 4;\\n            }\\n            if (value >= 10**2) {\\n                value /= 10**2;\\n                result += 2;\\n            }\\n            if (value >= 10**1) {\\n                result += 1;\\n            }\\n        }\\n        return result;\\n    }\\n\\n    /**\\n     * @dev Return the log in base 10, following the selected rounding direction, of a positive value.\\n     * Returns 0 if given 0.\\n     */\\n    function log10(uint256 value, Rounding rounding) internal pure returns (uint256) {\\n        unchecked {\\n            uint256 result = log10(value);\\n            return result + (rounding == Rounding.Up && 10**result < value ? 1 : 0);\\n        }\\n    }\\n\\n    /**\\n     * @dev Return the log in base 256, rounded down, of a positive value.\\n     * Returns 0 if given 0.\\n     *\\n     * Adding one to the result gives the number of pairs of hex symbols needed to represent `value` as a hex string.\\n     */\\n    function log256(uint256 value) internal pure returns (uint256) {\\n        uint256 result = 0;\\n        unchecked {\\n            if (value >> 128 > 0) {\\n                value >>= 128;\\n                result += 16;\\n            }\\n            if (value >> 64 > 0) {\\n                value >>= 64;\\n                result += 8;\\n            }\\n            if (value >> 32 > 0) {\\n                value >>= 32;\\n                result += 4;\\n            }\\n            if (value >> 16 > 0) {\\n                value >>= 16;\\n                result += 2;\\n            }\\n            if (value >> 8 > 0) {\\n                result += 1;\\n            }\\n        }\\n        return result;\\n    }\\n\\n    /**\\n     * @dev Return the log in base 10, following the selected rounding direction, of a positive value.\\n     * Returns 0 if given 0.\\n     */\\n    function log256(uint256 value, Rounding rounding) internal pure returns (uint256) {\\n        unchecked {\\n            uint256 result = log256(value);\\n            return result + (rounding == Rounding.Up && 1 << (result * 8) < value ? 1 : 0);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0xa1e8e83cd0087785df04ac79fb395d9f3684caeaf973d9e2c71caef723a3a5d6\",\"license\":\"MIT\"},\"contracts/Sodium.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\nimport \\\"./base/ModuleManager.sol\\\";\\nimport \\\"./base/SessionManager.sol\\\";\\nimport \\\"./base/FallbackManager.sol\\\";\\nimport \\\"./base/GuardManager.sol\\\";\\nimport \\\"./common/Singleton.sol\\\";\\nimport \\\"./common/EtherPaymentFallback.sol\\\";\\nimport \\\"./interfaces/ISignatureValidator.sol\\\";\\nimport \\\"./external/GnosisSafeMath.sol\\\";\\nimport \\\"./eip4337/core/BaseAccount.sol\\\";\\nimport \\\"./eip4337/interfaces/IEntryPoint.sol\\\";\\nimport \\\"@openzeppelin/contracts/utils/cryptography/ECDSA.sol\\\";\\nimport \\\"./base/NonceManager.sol\\\";\\nimport \\\"./common/Enum.sol\\\";\\n\\nstruct Transaction {\\n    Enum.Operation op; // Performs delegatecall\\n    bool revertOnError; // Reverts transaction bundle if tx fails\\n    uint256 gasLimit; // Maximum gas to be forwarded\\n    address target; // Address of the contract to call\\n    uint256 value; // Amount of ETH to pass with the call\\n    bytes data; // calldata to pass\\n}\\n\\ncontract Sodium is\\n    Singleton,\\n    ModuleManager,\\n    SessionManager,\\n    NonceManager,\\n    ISignatureValidatorConstants,\\n    FallbackManager,\\n    GuardManager,\\n    BaseAccount,\\n    EtherPaymentFallback\\n{\\n    using ECDSA for bytes32;\\n    using GnosisSafeMath for uint256;\\n\\n    string public constant VERSION = \\\"0.0.1\\\";\\n\\n    // keccak256(\\n    //     \\\"EIP712Domain(uint256 chainId,address verifyingContract)\\\"\\n    // );\\n    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =\\n        0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;\\n\\n    event SodiumSetup(\\n        address indexed sessionOwner,\\n        bytes4 platform,\\n        address fallbackHandler\\n    );\\n\\n    bool private initialized;\\n    address public immutable _entryPoint;\\n\\n    // This constructor ensures that this contract can only be used as a master copy for Proxy contracts\\n    constructor(IEntryPoint entryPoint) {\\n        _entryPoint = address(entryPoint);\\n    }\\n\\n    function setup(\\n        address _sessionOwner,\\n        bytes4 _platform,\\n        address _fallbackHandler\\n    ) public {\\n        require(!initialized, \\\"Already initialized\\\");\\n        require(_fallbackHandler != address(0), \\\"Required fallback handler\\\");\\n        initialized = true;\\n        internalSetFallbackHandler(_fallbackHandler);\\n        internalAddSession(_sessionOwner, _platform);\\n    }\\n\\n    /**\\n     * @notice Returns the next nonce of the default nonce space\\n     * @dev The default nonce space is 0x00\\n     * @return The next nonce\\n     */\\n    function nonce() public view override returns (uint256) {\\n        return readNonce(0);\\n    }\\n\\n    function entryPoint() public view override returns (IEntryPoint) {\\n        return IEntryPoint(_entryPoint);\\n    }\\n\\n    function upgradeTo(Sodium newSingleton) external authorized {\\n        require(newSingleton.isSodiumSingleton(), \\\"Not a Sodium singleton\\\");\\n        _setSingleton(address(newSingleton));\\n    }\\n\\n    /**\\n     * validate the signature is valid for this message.\\n     * @param userOp validate the userOp.signature field\\n     * @param userOpHash convenient field: the hash of the request, to check the signature against\\n     *          (also hashes the entrypoint and chain id)\\n     * @return validationData signature and time-range of this operation\\n     *      <20-byte> sigAuthorizer - 0 for valid signature, 1 to mark signature failure,\\n     *         otherwise, an address of an \\\"authorizer\\\" contract.\\n     *      <6-byte> validUntil - last timestamp this operation is valid. 0 for \\\"indefinite\\\"\\n     *      <6-byte> validAfter - first timestamp this operation is valid\\n     *      If the account doesn't use time-range, it is enough to return SIG_VALIDATION_FAILED value (1) for signature failure.\\n     *      Note that the validation code cannot use block.timestamp (or block.number) directly.\\n     */\\n    function _validateSignature(\\n        UserOperation calldata userOp,\\n        bytes32 userOpHash\\n    ) internal override returns (uint256 validationData) {\\n        // validate the signature is valid for this message.\\n    }\\n\\n    /**\\n     * validate the current nonce matches the UserOperation nonce.\\n     * then it should update the account's state to prevent replay of this UserOperation.\\n     * called only if initCode is empty (since \\\"nonce\\\" field is used as \\\"salt\\\" on account creation)\\n     * @param userOp the op to validate.\\n     */\\n    function _validateAndUpdateNonce(\\n        UserOperation calldata userOp\\n    ) internal override {\\n        // _validateNonce(userOp.nonce);\\n    }\\n\\n    function _requireFromAdmin() internal view {\\n        require(\\n            msg.sender == address(this) || msg.sender == address(_entryPoint),\\n            \\\"only entryPoint or wallet self\\\"\\n        );\\n    }\\n\\n    /**\\n     * @notice Allow eip-4337 entryPoint or wallet self to execute an action\\n     * @dev Relayers must ensure that the gasLimit specified for each transaction\\n     *      is acceptable to them. A user could specify large enough that it could\\n     *      consume all the gas available.\\n     * @param _txs Transactions to process\\n     */\\n    function execute(Transaction[] memory _txs) public {\\n        // only allow eip-4337 entryPoint or wallet self to execute an action\\n        _requireFromAdmin();\\n        // Execute the transactions\\n        _execute(_txs);\\n    }\\n\\n    /**\\n     * @notice Executes a list of transactions\\n     * @param _txs  Transactions to execute\\n     */\\n    function _execute(Transaction[] memory _txs) private {\\n        // Execute transaction\\n        for (uint256 i = 0; i < _txs.length; i++) {\\n            Transaction memory transaction = _txs[i];\\n            bool success;\\n            bytes memory result;\\n            require(\\n                gasleft() >= transaction.gasLimit,\\n                \\\"Sodium: NOT_ENOUGH_GAS\\\"\\n            );\\n            if (transaction.op == Enum.Operation.DelegateCall) {\\n                (success, result) = transaction.target.delegatecall{\\n                    gas: transaction.gasLimit == 0\\n                        ? gasleft()\\n                        : transaction.gasLimit\\n                }(transaction.data);\\n            } else {\\n                (success, result) = transaction.target.call{\\n                    value: transaction.value,\\n                    gas: transaction.gasLimit == 0\\n                        ? gasleft()\\n                        : transaction.gasLimit\\n                }(transaction.data);\\n            }\\n            if (!success && transaction.revertOnError) {\\n                assembly {\\n                    revert(add(result, 0x20), mload(result))\\n                }\\n            }\\n        }\\n    }\\n\\n    /// @dev Returns the chain id used by this contract.\\n    function getChainId() public view returns (uint256) {\\n        uint256 id;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            id := chainid()\\n        }\\n        return id;\\n    }\\n\\n    function domainSeparator() public view returns (bytes32) {\\n        return\\n            keccak256(\\n                abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)\\n            );\\n    }\\n}\\n\",\"keccak256\":\"0xcc83f84329bcebdffcb13e1dd539a106c670ecf8494c85f91a0aae00a87aec17\",\"license\":\"LGPL-3.0-only\"},\"contracts/base/Executor.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\nimport \\\"../common/Enum.sol\\\";\\n\\ncontract Executor {\\n    function execute(\\n        address to,\\n        uint256 value,\\n        bytes memory data,\\n        Enum.Operation operation,\\n        uint256 txGas\\n    ) internal returns (bool success) {\\n        if (operation == Enum.Operation.DelegateCall) {\\n            // solhint-disable-next-line no-inline-assembly\\n            assembly {\\n                success := delegatecall(txGas, to, add(data, 0x20), mload(data), 0, 0)\\n            }\\n        } else {\\n            // solhint-disable-next-line no-inline-assembly\\n            assembly {\\n                success := call(txGas, to, value, add(data, 0x20), mload(data), 0, 0)\\n            }\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x5fb71b98bb583620d71f6ed9704e8d6a3179663fed1cea0eded02bcaa1ee8185\",\"license\":\"LGPL-3.0-only\"},\"contracts/base/FallbackManager.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\nimport \\\"../common/SelfAuthorized.sol\\\";\\n\\n/// @title Fallback Manager - A contract that manages fallback calls made to this contract\\n/// @author Richard Meissner - <richard@gnosis.pm>\\ncontract FallbackManager is SelfAuthorized {\\n    event ChangedFallbackHandler(address handler);\\n\\n    // keccak256(\\\"fallback_manager.handler.address\\\")\\n    bytes32 internal constant FALLBACK_HANDLER_STORAGE_SLOT = 0x6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d5;\\n\\n    function internalSetFallbackHandler(address handler) internal {\\n        bytes32 slot = FALLBACK_HANDLER_STORAGE_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, handler)\\n        }\\n    }\\n\\n    /// @dev Allows to add a contract to handle fallback calls.\\n    ///      Only fallback calls without value and with data will be forwarded.\\n    ///      This can only be done via a Safe transaction.\\n    /// @param handler contract to handle fallbacks calls.\\n    function setFallbackHandler(address handler) public authorized {\\n        internalSetFallbackHandler(handler);\\n        emit ChangedFallbackHandler(handler);\\n    }\\n\\n    // solhint-disable-next-line payable-fallback,no-complex-fallback\\n    fallback() external {\\n        bytes32 slot = FALLBACK_HANDLER_STORAGE_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            let handler := sload(slot)\\n            if iszero(handler) {\\n                return(0, 0)\\n            }\\n            calldatacopy(0, 0, calldatasize())\\n            // The msg.sender address is shifted to the left by 12 bytes to remove the padding\\n            // Then the address without padding is stored right after the calldata\\n            mstore(calldatasize(), shl(96, caller()))\\n            // Add 20 bytes for the address appended add the end\\n            let success := call(gas(), handler, 0, 0, add(calldatasize(), 20), 0, 0)\\n            returndatacopy(0, 0, returndatasize())\\n            if iszero(success) {\\n                revert(0, returndatasize())\\n            }\\n            return(0, returndatasize())\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x1be9f0f3e80a78134c2e3a026c6a14759785bd35d135e87a4a025aeb6742791f\",\"license\":\"LGPL-3.0-only\"},\"contracts/base/GuardManager.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\nimport \\\"../common/Enum.sol\\\";\\nimport \\\"../common/SelfAuthorized.sol\\\";\\n\\ninterface Guard {\\n    function checkTransaction(\\n        address to,\\n        uint256 value,\\n        bytes memory data,\\n        Enum.Operation operation,\\n        uint256 safeTxGas,\\n        uint256 baseGas,\\n        uint256 gasPrice,\\n        address gasToken,\\n        address payable refundReceiver,\\n        bytes memory signatures,\\n        address msgSender\\n    ) external;\\n\\n    function checkAfterExecution(bytes32 txHash, bool success) external;\\n}\\n\\n/// @title Fallback Manager - A contract that manages fallback calls made to this contract\\n/// @author Richard Meissner - <richard@gnosis.pm>\\ncontract GuardManager is SelfAuthorized {\\n    event ChangedGuard(address guard);\\n    // keccak256(\\\"guard_manager.guard.address\\\")\\n    bytes32 internal constant GUARD_STORAGE_SLOT = 0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;\\n\\n    /// @dev Set a guard that checks transactions before execution\\n    /// @param guard The address of the guard to be used or the 0 address to disable the guard\\n    function setGuard(address guard) external authorized {\\n        bytes32 slot = GUARD_STORAGE_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, guard)\\n        }\\n        emit ChangedGuard(guard);\\n    }\\n\\n    function getGuard() internal view returns (address guard) {\\n        bytes32 slot = GUARD_STORAGE_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            guard := sload(slot)\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x53a532a31f9632d5a73ad0df56f05bd2b66a2f781f571eb48d00367d370707f9\",\"license\":\"LGPL-3.0-only\"},\"contracts/base/ModuleManager.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\nimport \\\"../common/Enum.sol\\\";\\nimport \\\"../common/SelfAuthorized.sol\\\";\\nimport \\\"./Executor.sol\\\";\\n\\ncontract ModuleManager is SelfAuthorized, Executor {\\n    event EnabledModule(address module);\\n    event DisabledModule(address module);\\n    event ExecutionFromModuleSuccess(address indexed module);\\n    event ExecutionFromModuleFailure(address indexed module);\\n\\n    address internal constant SENTINEL_MODULES = address(0x1);\\n\\n    mapping(address => address) internal modules;\\n\\n    function setupModules() external authorized {\\n        require(modules[SENTINEL_MODULES] == address(0), \\\"SDMM100\\\");\\n        modules[SENTINEL_MODULES] = SENTINEL_MODULES;\\n    }\\n\\n    /// @dev Allows to add a module to the whitelist.\\n    ///      This can only be done via a Safe transaction.\\n    /// @notice Enables the module `module` for the Safe.\\n    /// @param module Module to be whitelisted.\\n    function enableModule(address module) public authorized {\\n        // Module address cannot be null or sentinel.\\n        require(module != address(0) && module != SENTINEL_MODULES, \\\"SDMM101\\\");\\n        // Module cannot be added twice.\\n        require(modules[module] == address(0), \\\"SDMM102\\\");\\n        modules[module] = modules[SENTINEL_MODULES];\\n        modules[SENTINEL_MODULES] = module;\\n        emit EnabledModule(module);\\n    }\\n\\n    /// @dev Allows to remove a module from the whitelist.\\n    ///      This can only be done via a Safe transaction.\\n    /// @notice Disables the module `module` for the Safe.\\n    /// @param prevModule Module that pointed to the module to be removed in the linked list\\n    /// @param module Module to be removed.\\n    function disableModule(\\n        address prevModule,\\n        address module\\n    ) public authorized {\\n        // Validate module address and check that it corresponds to module index.\\n        require(module != address(0) && module != SENTINEL_MODULES, \\\"SDMM101\\\");\\n        require(modules[prevModule] == module, \\\"SDMM103\\\");\\n        modules[prevModule] = modules[module];\\n        modules[module] = address(0);\\n        emit DisabledModule(module);\\n    }\\n\\n    /// @dev Allows a Module to execute a Safe transaction without any further confirmations.\\n    /// @param to Destination address of module transaction.\\n    /// @param value Ether value of module transaction.\\n    /// @param data Data payload of module transaction.\\n    /// @param operation Operation type of module transaction.\\n    function execTransactionFromModule(\\n        address to,\\n        uint256 value,\\n        bytes memory data,\\n        Enum.Operation operation\\n    ) public virtual returns (bool success) {\\n        // Only whitelisted modules are allowed.\\n        require(\\n            msg.sender != SENTINEL_MODULES && modules[msg.sender] != address(0),\\n            \\\"SDMM104\\\"\\n        );\\n        // Execute transaction without further confirmations.\\n        success = execute(to, value, data, operation, gasleft());\\n        if (success) emit ExecutionFromModuleSuccess(msg.sender);\\n        else emit ExecutionFromModuleFailure(msg.sender);\\n    }\\n\\n    /// @dev Allows a Module to execute a Safe transaction without any further confirmations and return data\\n    /// @param to Destination address of module transaction.\\n    /// @param value Ether value of module transaction.\\n    /// @param data Data payload of module transaction.\\n    /// @param operation Operation type of module transaction.\\n    function execTransactionFromModuleReturnData(\\n        address to,\\n        uint256 value,\\n        bytes memory data,\\n        Enum.Operation operation\\n    ) public returns (bool success, bytes memory returnData) {\\n        success = execTransactionFromModule(to, value, data, operation);\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            // Load free memory location\\n            let ptr := mload(0x40)\\n            // We allocate memory for the return data by setting the free memory location to\\n            // current free memory location + data size + 32 bytes for data size value\\n            mstore(0x40, add(ptr, add(returndatasize(), 0x20)))\\n            // Store the size\\n            mstore(ptr, returndatasize())\\n            // Store the data\\n            returndatacopy(add(ptr, 0x20), 0, returndatasize())\\n            // Point the return data to the correct memory location\\n            returnData := ptr\\n        }\\n    }\\n\\n    /// @dev Returns if an module is enabled\\n    /// @return True if the module is enabled\\n    function isModuleEnabled(address module) public view returns (bool) {\\n        return SENTINEL_MODULES != module && modules[module] != address(0);\\n    }\\n}\\n\",\"keccak256\":\"0x14b2ef2471bd7913a95cf426fc626bf65023d7828fe78ca58cf0cd76bea1e994\",\"license\":\"LGPL-3.0-only\"},\"contracts/base/NonceManager.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\nimport \\\"../common/SelfAuthorized.sol\\\";\\nimport \\\"../common/StorageHelper.sol\\\";\\nimport \\\"../interfaces/INonceManager.sol\\\";\\n\\ncontract NonceManager is SelfAuthorized, INonceManager {\\n    // NONCE_KEY = keccak256(\\\"org.sodium.base.nonce\\\");\\n    bytes32 private constant NONCE_KEY =\\n        bytes32(\\n            0x1ec7ef52f8bbd89fae80c55c6884305d3fb5ef41070638221dac337a4377b7df\\n        );\\n\\n    uint256 private constant NONCE_BITS = 96;\\n    bytes32 private constant NONCE_MASK = bytes32((1 << NONCE_BITS) - 1);\\n\\n    /**\\n     * @notice Decodes a raw nonce\\n     * @dev A raw nonce is encoded using the first 160 bits for the space\\n     *  and the last 96 bits for the nonce\\n     * @param _rawNonce Nonce to be decoded\\n     * @return _space The nonce space of the raw nonce\\n     * @return _nonce The nonce of the raw nonce\\n     */\\n    function _decodeNonce(\\n        uint256 _rawNonce\\n    ) private pure returns (uint256 _space, uint256 _nonce) {\\n        _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);\\n        _space = _rawNonce >> NONCE_BITS;\\n    }\\n\\n    /**\\n     * @notice Returns the next nonce of the given nonce space\\n     * @param _space Nonce space, each space keeps an independent nonce count\\n     * @return The next nonce\\n     */\\n    function readNonce(uint256 _space) public view returns (uint256) {\\n        return\\n            uint256(StorageHelper.readBytes32Map(NONCE_KEY, bytes32(_space)));\\n    }\\n\\n    /**\\n     * @notice Changes the next nonce of the given nonce space\\n     * @param _space Nonce space, each space keeps an independent nonce count\\n     * @param _nonce Nonce to write on the space\\n     */\\n    function _writeNonce(uint256 _space, uint256 _nonce) private {\\n        StorageHelper.writeBytes32Map(\\n            NONCE_KEY,\\n            bytes32(_space),\\n            bytes32(_nonce)\\n        );\\n    }\\n\\n    /**\\n     * @notice Verify if a nonce is valid\\n     * @param _rawNonce Nonce to validate (may contain an encoded space)\\n     * @dev A valid nonce must be above the last one used\\n     *   with a maximum delta of 100\\n     */\\n    function _validateNonce(uint256 _rawNonce) internal {\\n        // Retrieve current nonce for this wallet\\n        (uint256 space, uint256 providedNonce) = _decodeNonce(_rawNonce);\\n        uint256 currentNonce = readNonce(space);\\n\\n        // Verify if nonce is valid\\n        require(providedNonce == currentNonce, \\\"INVALID_NONCE\\\");\\n\\n        // Update signature nonce\\n        uint256 newNonce = providedNonce + 1;\\n        _writeNonce(space, newNonce);\\n        emit NonceChange(space, newNonce);\\n    }\\n}\\n\",\"keccak256\":\"0xe2ffeccd30c6b4fbea15c1470038659105d8bf80fd6d401375d63c0faa67c9d9\",\"license\":\"LGPL-3.0-only\"},\"contracts/base/SessionManager.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\nimport \\\"../common/SelfAuthorized.sol\\\";\\n\\ncontract SessionManager is SelfAuthorized {\\n    event AddedSession(address owner, bytes4 sessionKey);\\n    event RemovedSession(address owner, bytes4 sessionKey);\\n\\n    bytes4 internal constant sessionPlatformPC = bytes4(keccak256(\\\"pc\\\"));\\n    bytes4 internal constant sessionPlatformMobile =\\n        bytes4(keccak256(\\\"mobile\\\"));\\n    bytes4 internal constant sessionPlatformWeb = bytes4(keccak256(\\\"web\\\"));\\n\\n    // kecc256(\\\"pc|mobile|web\\\") => session pubkey address\\n    mapping(bytes4 => address) internal sessionByPlatform;\\n\\n    function checkPlatform(bytes4 platform) internal pure {\\n        require(\\n            platform == sessionPlatformPC ||\\n                platform == sessionPlatformMobile ||\\n                platform == sessionPlatformWeb,\\n            \\\"invalid platform\\\"\\n        );\\n    }\\n\\n    function internalAddSession(address owner, bytes4 platform) internal {\\n        checkPlatform(platform);\\n        sessionByPlatform[platform] = owner;\\n        emit AddedSession(owner, platform);\\n    }\\n\\n    function addSession(address owner, bytes4 platform) public authorized {\\n        if (sessionByPlatform[platform] != address(0)) {\\n            removeSession(sessionByPlatform[platform], platform);\\n        }\\n        internalAddSession(owner, platform);\\n    }\\n\\n    function removeSession(address owner, bytes4 platform) public authorized {\\n        require(\\n            sessionByPlatform[platform] == owner,\\n            \\\"platform session expired\\\"\\n        );\\n        sessionByPlatform[platform] = address(0);\\n        emit RemovedSession(owner, platform);\\n    }\\n\\n    function isSessionOwner(address owner) public view returns (bool) {\\n        if (owner == address(0)) {\\n            return false;\\n        }\\n        address[] memory owners = getSessionOwners();\\n        for (uint256 i = 0; i < owners.length; i++) {\\n            if (owner == owners[i]) {\\n                return true;\\n            }\\n        }\\n        return false;\\n    }\\n\\n    /// @dev Returns array of owners.\\n    /// @return Array of session owners.\\n    function getSessionOwners() public view returns (address[] memory) {\\n        address[] memory array = new address[](3);\\n        array[0] = sessionByPlatform[sessionPlatformPC];\\n        array[1] = sessionByPlatform[sessionPlatformMobile];\\n        array[2] = sessionByPlatform[sessionPlatformWeb];\\n        return array;\\n    }\\n}\\n\",\"keccak256\":\"0x5b0468f441be0d1f6a048b523a091f21ef3bda1ca9a63527ee300c08bad3937a\",\"license\":\"LGPL-3.0-only\"},\"contracts/common/Enum.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\n/// @title Enum - Collection of enums\\n/// @author Richard Meissner - <richard@gnosis.pm>\\ncontract Enum {\\n    enum Operation {Call, DelegateCall}\\n}\\n\",\"keccak256\":\"0x473e45b1a5cc47be494b0e123c9127f0c11c1e0992a321ae5a644c0bfdb2c14f\",\"license\":\"LGPL-3.0-only\"},\"contracts/common/EtherPaymentFallback.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\ncontract EtherPaymentFallback {\\n    event NativeTokenReceived(address indexed sender, uint256 value);\\n\\n    /// @dev Fallback function accepts Ether transactions.\\n    receive() external payable {\\n        emit NativeTokenReceived(msg.sender, msg.value);\\n    }\\n}\",\"keccak256\":\"0x332fdf4f747e35befb5b4a19a595e6c5f87554e6b7c899e5d609bc2b9b7a1f2e\",\"license\":\"LGPL-3.0-only\"},\"contracts/common/SelfAuthorized.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\n/// @title SelfAuthorized - authorizes current contract to perform actions\\n/// @author Richard Meissner - <richard@gnosis.pm>\\ncontract SelfAuthorized {\\n    function requireSelfCall() private view {\\n        require(msg.sender == address(this), \\\"GS031\\\");\\n    }\\n\\n    modifier authorized() {\\n        // This is a function call as it minimized the bytecode size\\n        requireSelfCall();\\n        _;\\n    }\\n}\\n\",\"keccak256\":\"0x59d36efca578b75541a776f62a0d0ef03712fc27b6647c3915c14b572106d7bc\",\"license\":\"LGPL-3.0-only\"},\"contracts/common/Singleton.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\nimport \\\"./SelfAuthorized.sol\\\";\\n\\ncontract Singleton is SelfAuthorized {\\n    // singleton always needs to be first declared variable, to ensure that it is at the same location as in the Proxy contract.\\n    // It should also always be ensured that the address is stored alone (uses a full word)\\n    address private _singleton;\\n\\n    /**\\n     * @notice Updates the Wallet implementation\\n     * @param _imp New implementation address\\n     * @dev The wallet implementation is stored on the storage slot\\n     *   defined by the address of the wallet itself\\n     *   WARNING updating this value may break the wallet and users\\n     *   must be confident that the new implementation is safe.\\n     */\\n    function _setSingleton(address _imp) internal {\\n        assembly {\\n            sstore(address(), _imp)\\n        }\\n    }\\n\\n    /**\\n     * @notice Returns the Wallet implementation\\n     * @return _imp The address of the current Wallet implementation\\n     */\\n    function getSingleton() external view returns (address _imp) {\\n        assembly {\\n            _imp := sload(address())\\n        }\\n    }\\n\\n    function isSodiumSingleton() external pure returns (bool) {\\n        return true;\\n    }\\n}\\n\",\"keccak256\":\"0x43b03b3ef3cde68d590fb76944f34be50db8190bf4fe701383d053b3a51d1170\",\"license\":\"LGPL-3.0-only\"},\"contracts/common/StorageHelper.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\nlibrary StorageHelper {\\n    function writeBytes32(bytes32 _key, bytes32 _val) internal {\\n        assembly {\\n            sstore(_key, _val)\\n        }\\n    }\\n\\n    function readBytes32(bytes32 _key) internal view returns (bytes32 val) {\\n        assembly {\\n            val := sload(_key)\\n        }\\n    }\\n\\n    function writeBytes32Map(\\n        bytes32 _key,\\n        bytes32 _subKey,\\n        bytes32 _val\\n    ) internal {\\n        bytes32 key = keccak256(abi.encode(_key, _subKey));\\n        assembly {\\n            sstore(key, _val)\\n        }\\n    }\\n\\n    function readBytes32Map(bytes32 _key, bytes32 _subKey)\\n        internal\\n        view\\n        returns (bytes32 val)\\n    {\\n        bytes32 key = keccak256(abi.encode(_key, _subKey));\\n        assembly {\\n            val := sload(key)\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x4d73862ba5905b3ed2cf152f4f54e131246bd405ed428afdd0072af2909400fa\",\"license\":\"LGPL-3.0-only\"},\"contracts/eip4337/core/BaseAccount.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity ^0.8.12;\\n\\n/* solhint-disable avoid-low-level-calls */\\n/* solhint-disable no-inline-assembly */\\n/* solhint-disable reason-string */\\n\\nimport \\\"../interfaces/IAccount.sol\\\";\\nimport \\\"../interfaces/IEntryPoint.sol\\\";\\nimport \\\"./Helpers.sol\\\";\\n\\n/**\\n * Basic account implementation.\\n * this contract provides the basic logic for implementing the IAccount interface  - validateUserOp\\n * specific account implementation should inherit it and provide the account-specific logic\\n */\\nabstract contract BaseAccount is IAccount {\\n    using UserOperationLib for UserOperation;\\n\\n    //return value in case of signature failure, with no time-range.\\n    // equivalent to _packValidationData(true,0,0);\\n    uint256 constant internal SIG_VALIDATION_FAILED = 1;\\n\\n    /**\\n     * return the account nonce.\\n     * subclass should return a nonce value that is used both by _validateAndUpdateNonce, and by the external provider (to read the current nonce)\\n     */\\n    function nonce() public view virtual returns (uint256);\\n\\n    /**\\n     * return the entryPoint used by this account.\\n     * subclass should return the current entryPoint used by this account.\\n     */\\n    function entryPoint() public view virtual returns (IEntryPoint);\\n\\n    /**\\n     * Validate user's signature and nonce.\\n     * subclass doesn't need to override this method. Instead, it should override the specific internal validation methods.\\n     */\\n    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)\\n    external override virtual returns (uint256 validationData) {\\n        _requireFromEntryPoint();\\n        validationData = _validateSignature(userOp, userOpHash);\\n        if (userOp.initCode.length == 0) {\\n            _validateAndUpdateNonce(userOp);\\n        }\\n        _payPrefund(missingAccountFunds);\\n    }\\n\\n    /**\\n     * ensure the request comes from the known entrypoint.\\n     */\\n    function _requireFromEntryPoint() internal virtual view {\\n        require(msg.sender == address(entryPoint()), \\\"account: not from EntryPoint\\\");\\n    }\\n\\n    /**\\n     * validate the signature is valid for this message.\\n     * @param userOp validate the userOp.signature field\\n     * @param userOpHash convenient field: the hash of the request, to check the signature against\\n     *          (also hashes the entrypoint and chain id)\\n     * @return validationData signature and time-range of this operation\\n     *      <20-byte> sigAuthorizer - 0 for valid signature, 1 to mark signature failure,\\n     *         otherwise, an address of an \\\"authorizer\\\" contract.\\n     *      <6-byte> validUntil - last timestamp this operation is valid. 0 for \\\"indefinite\\\"\\n     *      <6-byte> validAfter - first timestamp this operation is valid\\n     *      If the account doesn't use time-range, it is enough to return SIG_VALIDATION_FAILED value (1) for signature failure.\\n     *      Note that the validation code cannot use block.timestamp (or block.number) directly.\\n     */\\n    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)\\n    internal virtual returns (uint256 validationData);\\n\\n    /**\\n     * validate the current nonce matches the UserOperation nonce.\\n     * then it should update the account's state to prevent replay of this UserOperation.\\n     * called only if initCode is empty (since \\\"nonce\\\" field is used as \\\"salt\\\" on account creation)\\n     * @param userOp the op to validate.\\n     */\\n    function _validateAndUpdateNonce(UserOperation calldata userOp) internal virtual;\\n\\n    /**\\n     * sends to the entrypoint (msg.sender) the missing funds for this transaction.\\n     * subclass MAY override this method for better funds management\\n     * (e.g. send to the entryPoint more than the minimum required, so that in future transactions\\n     * it will not be required to send again)\\n     * @param missingAccountFunds the minimum value this method should send the entrypoint.\\n     *  this value MAY be zero, in case there is enough deposit, or the userOp has a paymaster.\\n     */\\n    function _payPrefund(uint256 missingAccountFunds) internal virtual {\\n        if (missingAccountFunds != 0) {\\n            (bool success,) = payable(msg.sender).call{value : missingAccountFunds, gas : type(uint256).max}(\\\"\\\");\\n            (success);\\n            //ignore failure (its EntryPoint's job to verify, not account.)\\n        }\\n    }\\n}\",\"keccak256\":\"0xd4b9b6443593b317a19ce3371b82bb3f1698627050435235c462921f5114cb67\",\"license\":\"GPL-3.0\"},\"contracts/eip4337/core/Helpers.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity ^0.8.12;\\n\\n/**\\n * returned data from validateUserOp.\\n * validateUserOp returns a uint256, with is created by `_packedValidationData` and parsed by `_parseValidationData`\\n * @param aggregator - address(0) - the account validated the signature by itself.\\n *              address(1) - the account failed to validate the signature.\\n *              otherwise - this is an address of a signature aggregator that must be used to validate the signature.\\n * @param validAfter - this UserOp is valid only after this timestamp.\\n * @param validaUntil - this UserOp is valid only up to this timestamp.\\n */\\nstruct ValidationData {\\n    address aggregator;\\n    uint48 validAfter;\\n    uint48 validUntil;\\n}\\n\\n//extract sigFailed, validAfter, validUntil.\\n// also convert zero validUntil to type(uint48).max\\nfunction _parseValidationData(\\n    uint validationData\\n) pure returns (ValidationData memory data) {\\n    address aggregator = address(uint160(validationData));\\n    uint48 validUntil = uint48(validationData >> 160);\\n    if (validUntil == 0) {\\n        validUntil = type(uint48).max;\\n    }\\n    uint48 validAfter = uint48(validationData >> (48 + 160));\\n    return ValidationData(aggregator, validAfter, validUntil);\\n}\\n\\n// intersect account and paymaster ranges.\\nfunction _intersectTimeRange(\\n    uint256 validationData,\\n    uint256 paymasterValidationData\\n) pure returns (ValidationData memory) {\\n    ValidationData memory accountValidationData = _parseValidationData(\\n        validationData\\n    );\\n    ValidationData memory pmValidationData = _parseValidationData(\\n        paymasterValidationData\\n    );\\n    address aggregator = accountValidationData.aggregator;\\n    if (aggregator == address(0)) {\\n        aggregator = pmValidationData.aggregator;\\n    }\\n    uint48 validAfter = accountValidationData.validAfter;\\n    uint48 validUntil = accountValidationData.validUntil;\\n    uint48 pmValidAfter = pmValidationData.validAfter;\\n    uint48 pmValidUntil = pmValidationData.validUntil;\\n\\n    if (validAfter < pmValidAfter) validAfter = pmValidAfter;\\n    if (validUntil > pmValidUntil) validUntil = pmValidUntil;\\n    return ValidationData(aggregator, validAfter, validUntil);\\n}\\n\\n/**\\n * helper to pack the return value for validateUserOp\\n * @param data - the ValidationData to pack\\n */\\nfunction _packValidationData(\\n    ValidationData memory data\\n) pure returns (uint256) {\\n    return\\n        uint160(data.aggregator) |\\n        (uint256(data.validUntil) << 160) |\\n        (uint256(data.validAfter) << (160 + 48));\\n}\\n\\n/**\\n * helper to pack the return value for validateUserOp, when not using an aggregator\\n * @param sigFailed - true for signature failure, false for success\\n * @param validUntil last timestamp this UserOperation is valid (or zero for infinite)\\n * @param validAfter first timestamp this UserOperation is valid\\n */\\nfunction _packValidationData(\\n    bool sigFailed,\\n    uint48 validUntil,\\n    uint48 validAfter\\n) pure returns (uint256) {\\n    return\\n        (sigFailed ? 1 : 0) |\\n        (uint256(validUntil) << 160) |\\n        (uint256(validAfter) << (160 + 48));\\n}\\n\",\"keccak256\":\"0x10e419b300e0ea69db85a648605e874fd73df2dc5f36a56bea8f6601455487fc\",\"license\":\"GPL-3.0\"},\"contracts/eip4337/interfaces/IAccount.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity ^0.8.12;\\n\\nimport \\\"./UserOperation.sol\\\";\\n\\ninterface IAccount {\\n\\n    /**\\n     * Validate user's signature and nonce\\n     * the entryPoint will make the call to the recipient only if this validation call returns successfully.\\n     * signature failure should be reported by returning SIG_VALIDATION_FAILED (1).\\n     * This allows making a \\\"simulation call\\\" without a valid signature\\n     * Other failures (e.g. nonce mismatch, or invalid signature format) should still revert to signal failure.\\n     *\\n     * @dev Must validate caller is the entryPoint.\\n     *      Must validate the signature and nonce\\n     * @param userOp the operation that is about to be executed.\\n     * @param userOpHash hash of the user's request data. can be used as the basis for signature.\\n     * @param missingAccountFunds missing funds on the account's deposit in the entrypoint.\\n     *      This is the minimum amount to transfer to the sender(entryPoint) to be able to make the call.\\n     *      The excess is left as a deposit in the entrypoint, for future calls.\\n     *      can be withdrawn anytime using \\\"entryPoint.withdrawTo()\\\"\\n     *      In case there is a paymaster in the request (or the current deposit is high enough), this value will be zero.\\n     * @return validationData packaged ValidationData structure. use `_packValidationData` and `_unpackValidationData` to encode and decode\\n     *      <20-byte> sigAuthorizer - 0 for valid signature, 1 to mark signature failure,\\n     *         otherwise, an address of an \\\"authorizer\\\" contract.\\n     *      <6-byte> validUntil - last timestamp this operation is valid. 0 for \\\"indefinite\\\"\\n     *      <6-byte> validAfter - first timestamp this operation is valid\\n     *      If an account doesn't use time-range, it is enough to return SIG_VALIDATION_FAILED value (1) for signature failure.\\n     *      Note that the validation code cannot use block.timestamp (or block.number) directly.\\n     */\\n    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)\\n    external returns (uint256 validationData);\\n}\\n\",\"keccak256\":\"0x556a0e5980de18e90b115553ed502408155ba35f58642823010d9288047bc418\",\"license\":\"GPL-3.0\"},\"contracts/eip4337/interfaces/IAggregator.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity ^0.8.12;\\n\\nimport \\\"./UserOperation.sol\\\";\\n\\n/**\\n * Aggregated Signatures validator.\\n */\\ninterface IAggregator {\\n\\n    /**\\n     * validate aggregated signature.\\n     * revert if the aggregated signature does not match the given list of operations.\\n     */\\n    function validateSignatures(UserOperation[] calldata userOps, bytes calldata signature) external view;\\n\\n    /**\\n     * validate signature of a single userOp\\n     * This method is should be called by bundler after EntryPoint.simulateValidation() returns (reverts) with ValidationResultWithAggregation\\n     * First it validates the signature over the userOp. Then it returns data to be used when creating the handleOps.\\n     * @param userOp the userOperation received from the user.\\n     * @return sigForUserOp the value to put into the signature field of the userOp when calling handleOps.\\n     *    (usually empty, unless account and aggregator support some kind of \\\"multisig\\\"\\n     */\\n    function validateUserOpSignature(UserOperation calldata userOp)\\n    external view returns (bytes memory sigForUserOp);\\n\\n    /**\\n     * aggregate multiple signatures into a single value.\\n     * This method is called off-chain to calculate the signature to pass with handleOps()\\n     * bundler MAY use optimized custom code perform this aggregation\\n     * @param userOps array of UserOperations to collect the signatures from.\\n     * @return aggregatedSignature the aggregated signature\\n     */\\n    function aggregateSignatures(UserOperation[] calldata userOps) external view returns (bytes memory aggregatedSignature);\\n}\\n\",\"keccak256\":\"0x060e9ddb0152250c269ba0640dc5753834ac44cf182a2837d508c0c529cae26a\",\"license\":\"GPL-3.0\"},\"contracts/eip4337/interfaces/IEntryPoint.sol\":{\"content\":\"/**\\n ** Account-Abstraction (EIP-4337) singleton EntryPoint implementation.\\n ** Only one instance required on each chain.\\n **/\\n// SPDX-License-Identifier: GPL-3.0\\npragma solidity ^0.8.12;\\n\\n/* solhint-disable avoid-low-level-calls */\\n/* solhint-disable no-inline-assembly */\\n/* solhint-disable reason-string */\\n\\nimport \\\"./UserOperation.sol\\\";\\nimport \\\"./IStakeManager.sol\\\";\\nimport \\\"./IAggregator.sol\\\";\\n\\ninterface IEntryPoint is IStakeManager {\\n    /***\\n     * An event emitted after each successful request\\n     * @param userOpHash - unique identifier for the request (hash its entire content, except signature).\\n     * @param sender - the account that generates this request.\\n     * @param paymaster - if non-null, the paymaster that pays for this request.\\n     * @param nonce - the nonce value from the request.\\n     * @param success - true if the sender transaction succeeded, false if reverted.\\n     * @param actualGasCost - actual amount paid (by account or paymaster) for this UserOperation.\\n     * @param actualGasUsed - total gas used by this UserOperation (including preVerification, creation, validation and execution).\\n     */\\n    event UserOperationEvent(\\n        bytes32 indexed userOpHash,\\n        address indexed sender,\\n        address indexed paymaster,\\n        uint256 nonce,\\n        bool success,\\n        uint256 actualGasCost,\\n        uint256 actualGasUsed\\n    );\\n\\n    /**\\n     * account \\\"sender\\\" was deployed.\\n     * @param userOpHash the userOp that deployed this account. UserOperationEvent will follow.\\n     * @param sender the account that is deployed\\n     * @param factory the factory used to deploy this account (in the initCode)\\n     * @param paymaster the paymaster used by this UserOp\\n     */\\n    event AccountDeployed(\\n        bytes32 indexed userOpHash,\\n        address indexed sender,\\n        address factory,\\n        address paymaster\\n    );\\n\\n    /**\\n     * An event emitted if the UserOperation \\\"callData\\\" reverted with non-zero length\\n     * @param userOpHash the request unique identifier.\\n     * @param sender the sender of this request\\n     * @param nonce the nonce used in the request\\n     * @param revertReason - the return bytes from the (reverted) call to \\\"callData\\\".\\n     */\\n    event UserOperationRevertReason(\\n        bytes32 indexed userOpHash,\\n        address indexed sender,\\n        uint256 nonce,\\n        bytes revertReason\\n    );\\n\\n    /**\\n     * signature aggregator used by the following UserOperationEvents within this bundle.\\n     */\\n    event SignatureAggregatorChanged(address indexed aggregator);\\n\\n    /**\\n     * a custom revert error of handleOps, to identify the offending op.\\n     *  NOTE: if simulateValidation passes successfully, there should be no reason for handleOps to fail on it.\\n     *  @param opIndex - index into the array of ops to the failed one (in simulateValidation, this is always zero)\\n     *  @param reason - revert reason\\n     *      The string starts with a unique code \\\"AAmn\\\", where \\\"m\\\" is \\\"1\\\" for factory, \\\"2\\\" for account and \\\"3\\\" for paymaster issues,\\n     *      so a failure can be attributed to the correct entity.\\n     *   Should be caught in off-chain handleOps simulation and not happen on-chain.\\n     *   Useful for mitigating DoS attempts against batchers or for troubleshooting of factory/account/paymaster reverts.\\n     */\\n    error FailedOp(uint256 opIndex, string reason);\\n\\n    /**\\n     * error case when a signature aggregator fails to verify the aggregated signature it had created.\\n     */\\n    error SignatureValidationFailed(address aggregator);\\n\\n    /**\\n     * Successful result from simulateValidation.\\n     * @param returnInfo gas and time-range returned values\\n     * @param senderInfo stake information about the sender\\n     * @param factoryInfo stake information about the factory (if any)\\n     * @param paymasterInfo stake information about the paymaster (if any)\\n     */\\n    error ValidationResult(\\n        ReturnInfo returnInfo,\\n        StakeInfo senderInfo,\\n        StakeInfo factoryInfo,\\n        StakeInfo paymasterInfo\\n    );\\n\\n    /**\\n     * Successful result from simulateValidation, if the account returns a signature aggregator\\n     * @param returnInfo gas and time-range returned values\\n     * @param senderInfo stake information about the sender\\n     * @param factoryInfo stake information about the factory (if any)\\n     * @param paymasterInfo stake information about the paymaster (if any)\\n     * @param aggregatorInfo signature aggregation info (if the account requires signature aggregator)\\n     *      bundler MUST use it to verify the signature, or reject the UserOperation\\n     */\\n    error ValidationResultWithAggregation(\\n        ReturnInfo returnInfo,\\n        StakeInfo senderInfo,\\n        StakeInfo factoryInfo,\\n        StakeInfo paymasterInfo,\\n        AggregatorStakeInfo aggregatorInfo\\n    );\\n\\n    /**\\n     * return value of getSenderAddress\\n     */\\n    error SenderAddressResult(address sender);\\n\\n    /**\\n     * return value of simulateHandleOp\\n     */\\n    error ExecutionResult(\\n        uint256 preOpGas,\\n        uint256 paid,\\n        uint48 validAfter,\\n        uint48 validUntil,\\n        bool targetSuccess,\\n        bytes targetResult\\n    );\\n\\n    //UserOps handled, per aggregator\\n    struct UserOpsPerAggregator {\\n        UserOperation[] userOps;\\n        // aggregator address\\n        IAggregator aggregator;\\n        // aggregated signature\\n        bytes signature;\\n    }\\n\\n    /**\\n     * Execute a batch of UserOperation.\\n     * no signature aggregator is used.\\n     * if any account requires an aggregator (that is, it returned an aggregator when\\n     * performing simulateValidation), then handleAggregatedOps() must be used instead.\\n     * @param ops the operations to execute\\n     * @param beneficiary the address to receive the fees\\n     */\\n    function handleOps(\\n        UserOperation[] calldata ops,\\n        address payable beneficiary\\n    ) external;\\n\\n    /**\\n     * Execute a batch of UserOperation with Aggregators\\n     * @param opsPerAggregator the operations to execute, grouped by aggregator (or address(0) for no-aggregator accounts)\\n     * @param beneficiary the address to receive the fees\\n     */\\n    function handleAggregatedOps(\\n        UserOpsPerAggregator[] calldata opsPerAggregator,\\n        address payable beneficiary\\n    ) external;\\n\\n    /**\\n     * generate a request Id - unique identifier for this request.\\n     * the request ID is a hash over the content of the userOp (except the signature), the entrypoint and the chainid.\\n     */\\n    function getUserOpHash(\\n        UserOperation calldata userOp\\n    ) external view returns (bytes32);\\n\\n    /**\\n     * Simulate a call to account.validateUserOp and paymaster.validatePaymasterUserOp.\\n     * @dev this method always revert. Successful result is ValidationResult error. other errors are failures.\\n     * @dev The node must also verify it doesn't use banned opcodes, and that it doesn't reference storage outside the account's data.\\n     * @param userOp the user operation to validate.\\n     */\\n    function simulateValidation(UserOperation calldata userOp) external;\\n\\n    /**\\n     * gas and return values during simulation\\n     * @param preOpGas the gas used for validation (including preValidationGas)\\n     * @param prefund the required prefund for this operation\\n     * @param sigFailed validateUserOp's (or paymaster's) signature check failed\\n     * @param validAfter - first timestamp this UserOp is valid (merging account and paymaster time-range)\\n     * @param validUntil - last timestamp this UserOp is valid (merging account and paymaster time-range)\\n     * @param paymasterContext returned by validatePaymasterUserOp (to be passed into postOp)\\n     */\\n    struct ReturnInfo {\\n        uint256 preOpGas;\\n        uint256 prefund;\\n        bool sigFailed;\\n        uint48 validAfter;\\n        uint48 validUntil;\\n        bytes paymasterContext;\\n    }\\n\\n    /**\\n     * returned aggregated signature info.\\n     * the aggregator returned by the account, and its current stake.\\n     */\\n    struct AggregatorStakeInfo {\\n        address aggregator;\\n        StakeInfo stakeInfo;\\n    }\\n\\n    /**\\n     * simulate full execution of a UserOperation (including both validation and target execution)\\n     * this method will always revert with \\\"ExecutionResult\\\".\\n     * it performs full validation of the UserOperation, but ignores signature error.\\n     * an optional target address is called after the userop succeeds, and its value is returned\\n     * (before the entire call is reverted)\\n     * Note that in order to collect the the success/failure of the target call, it must be executed\\n     * with trace enabled to track the emitted events.\\n     * @param op the UserOperation to simulate\\n     * @param target if nonzero, a target address to call after userop simulation. If called, the targetSuccess and targetResult\\n     *        are set to the return from that call.\\n     * @param targetCallData callData to pass to target address\\n     */\\n    function simulateHandleOp(\\n        UserOperation calldata op,\\n        address target,\\n        bytes calldata targetCallData\\n    ) external;\\n}\\n\",\"keccak256\":\"0x64516675039e845ff5f86e22522ba67bc474058910f537df4a59cdb40712805a\",\"license\":\"GPL-3.0\"},\"contracts/eip4337/interfaces/IStakeManager.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0-only\\npragma solidity ^0.8.12;\\n\\n/**\\n * manage deposits and stakes.\\n * deposit is just a balance used to pay for UserOperations (either by a paymaster or an account)\\n * stake is value locked for at least \\\"unstakeDelay\\\" by the staked entity.\\n */\\ninterface IStakeManager {\\n\\n    event Deposited(\\n        address indexed account,\\n        uint256 totalDeposit\\n    );\\n\\n    event Withdrawn(\\n        address indexed account,\\n        address withdrawAddress,\\n        uint256 amount\\n    );\\n\\n    /// Emitted when stake or unstake delay are modified\\n    event StakeLocked(\\n        address indexed account,\\n        uint256 totalStaked,\\n        uint256 unstakeDelaySec\\n    );\\n\\n    /// Emitted once a stake is scheduled for withdrawal\\n    event StakeUnlocked(\\n        address indexed account,\\n        uint256 withdrawTime\\n    );\\n\\n    event StakeWithdrawn(\\n        address indexed account,\\n        address withdrawAddress,\\n        uint256 amount\\n    );\\n\\n    /**\\n     * @param deposit the entity's deposit\\n     * @param staked true if this entity is staked.\\n     * @param stake actual amount of ether staked for this entity.\\n     * @param unstakeDelaySec minimum delay to withdraw the stake.\\n     * @param withdrawTime - first block timestamp where 'withdrawStake' will be callable, or zero if already locked\\n     * @dev sizes were chosen so that (deposit,staked, stake) fit into one cell (used during handleOps)\\n     *    and the rest fit into a 2nd cell.\\n     *    112 bit allows for 10^15 eth\\n     *    48 bit for full timestamp\\n     *    32 bit allows 150 years for unstake delay\\n     */\\n    struct DepositInfo {\\n        uint112 deposit;\\n        bool staked;\\n        uint112 stake;\\n        uint32 unstakeDelaySec;\\n        uint48 withdrawTime;\\n    }\\n\\n    //API struct used by getStakeInfo and simulateValidation\\n    struct StakeInfo {\\n        uint256 stake;\\n        uint256 unstakeDelaySec;\\n    }\\n\\n    /// @return info - full deposit information of given account\\n    function getDepositInfo(address account) external view returns (DepositInfo memory info);\\n\\n    /// @return the deposit (for gas payment) of the account\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * add to the deposit of the given account\\n     */\\n    function depositTo(address account) external payable;\\n\\n    /**\\n     * add to the account's stake - amount and delay\\n     * any pending unstake is first cancelled.\\n     * @param _unstakeDelaySec the new lock duration before the deposit can be withdrawn.\\n     */\\n    function addStake(uint32 _unstakeDelaySec) external payable;\\n\\n    /**\\n     * attempt to unlock the stake.\\n     * the value can be withdrawn (using withdrawStake) after the unstake delay.\\n     */\\n    function unlockStake() external;\\n\\n    /**\\n     * withdraw from the (unlocked) stake.\\n     * must first call unlockStake and wait for the unstakeDelay to pass\\n     * @param withdrawAddress the address to send withdrawn value.\\n     */\\n    function withdrawStake(address payable withdrawAddress) external;\\n\\n    /**\\n     * withdraw from the deposit.\\n     * @param withdrawAddress the address to send withdrawn value.\\n     * @param withdrawAmount the amount to withdraw.\\n     */\\n    function withdrawTo(address payable withdrawAddress, uint256 withdrawAmount) external;\\n}\\n\",\"keccak256\":\"0xd227b02888cd4ac68daebcdfd992ec00f9fff66fa3b3bb16f656cd582fa3480f\",\"license\":\"GPL-3.0-only\"},\"contracts/eip4337/interfaces/UserOperation.sol\":{\"content\":\"// SPDX-License-Identifier: GPL-3.0\\npragma solidity ^0.8.12;\\n\\n/* solhint-disable no-inline-assembly */\\n\\n    /**\\n     * User Operation struct\\n     * @param sender the sender account of this request.\\n     * @param nonce unique value the sender uses to verify it is not a replay.\\n     * @param initCode if set, the account contract will be created by this constructor/\\n     * @param callData the method call to execute on this account.\\n     * @param callGasLimit the gas limit passed to the callData method call.\\n     * @param verificationGasLimit gas used for validateUserOp and validatePaymasterUserOp.\\n     * @param preVerificationGas gas not calculated by the handleOps method, but added to the gas paid. Covers batch overhead.\\n     * @param maxFeePerGas same as EIP-1559 gas parameter.\\n     * @param maxPriorityFeePerGas same as EIP-1559 gas parameter.\\n     * @param paymasterAndData if set, this field holds the paymaster address and paymaster-specific data. the paymaster will pay for the transaction instead of the sender.\\n     * @param signature sender-verified signature over the entire request, the EntryPoint address and the chain ID.\\n     */\\n    struct UserOperation {\\n\\n        address sender;\\n        uint256 nonce;\\n        bytes initCode;\\n        bytes callData;\\n        uint256 callGasLimit;\\n        uint256 verificationGasLimit;\\n        uint256 preVerificationGas;\\n        uint256 maxFeePerGas;\\n        uint256 maxPriorityFeePerGas;\\n        bytes paymasterAndData;\\n        bytes signature;\\n    }\\n\\n/**\\n * Utility functions helpful when working with UserOperation structs.\\n */\\nlibrary UserOperationLib {\\n\\n    function getSender(UserOperation calldata userOp) internal pure returns (address) {\\n        address data;\\n        //read sender from userOp, which is first userOp member (saves 800 gas...)\\n        assembly {data := calldataload(userOp)}\\n        return address(uint160(data));\\n    }\\n\\n    //relayer/block builder might submit the TX with higher priorityFee, but the user should not\\n    // pay above what he signed for.\\n    function gasPrice(UserOperation calldata userOp) internal view returns (uint256) {\\n    unchecked {\\n        uint256 maxFeePerGas = userOp.maxFeePerGas;\\n        uint256 maxPriorityFeePerGas = userOp.maxPriorityFeePerGas;\\n        if (maxFeePerGas == maxPriorityFeePerGas) {\\n            //legacy mode (for networks that don't support basefee opcode)\\n            return maxFeePerGas;\\n        }\\n        return min(maxFeePerGas, maxPriorityFeePerGas + block.basefee);\\n    }\\n    }\\n\\n    function pack(UserOperation calldata userOp) internal pure returns (bytes memory ret) {\\n        //lighter signature scheme. must match UserOp.ts#packUserOp\\n        bytes calldata sig = userOp.signature;\\n        // copy directly the userOp from calldata up to (but not including) the signature.\\n        // this encoding depends on the ABI encoding of calldata, but is much lighter to copy\\n        // than referencing each field separately.\\n        assembly {\\n            let ofs := userOp\\n            let len := sub(sub(sig.offset, ofs), 32)\\n            ret := mload(0x40)\\n            mstore(0x40, add(ret, add(len, 32)))\\n            mstore(ret, len)\\n            calldatacopy(add(ret, 32), ofs, len)\\n        }\\n    }\\n\\n    function hash(UserOperation calldata userOp) internal pure returns (bytes32) {\\n        return keccak256(pack(userOp));\\n    }\\n\\n    function min(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a < b ? a : b;\\n    }\\n}\\n\",\"keccak256\":\"0xf67381bb53c148ce587a74acdf576cc05d641a952180d801ac982898de30810e\",\"license\":\"GPL-3.0\"},\"contracts/external/GnosisSafeMath.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\n/**\\n * @title GnosisSafeMath\\n * @dev Math operations with safety checks that revert on error\\n * Renamed from SafeMath to GnosisSafeMath to avoid conflicts\\n * TODO: remove once open zeppelin update to solc 0.5.0\\n */\\nlibrary GnosisSafeMath {\\n    /**\\n     * @dev Multiplies two numbers, reverts on overflow.\\n     */\\n    function mul(uint256 a, uint256 b) internal pure returns (uint256) {\\n        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the\\n        // benefit is lost if 'b' is also tested.\\n        // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522\\n        if (a == 0) {\\n            return 0;\\n        }\\n\\n        uint256 c = a * b;\\n        require(c / a == b);\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Subtracts two numbers, reverts on overflow (i.e. if subtrahend is greater than minuend).\\n     */\\n    function sub(uint256 a, uint256 b) internal pure returns (uint256) {\\n        require(b <= a);\\n        uint256 c = a - b;\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Adds two numbers, reverts on overflow.\\n     */\\n    function add(uint256 a, uint256 b) internal pure returns (uint256) {\\n        uint256 c = a + b;\\n        require(c >= a);\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the largest of two numbers.\\n     */\\n    function max(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a >= b ? a : b;\\n    }\\n}\\n\",\"keccak256\":\"0x036a65e5f43cee60a50b5cebf08bbf425b9f32c793dcaf9f4f48097f06a5db62\",\"license\":\"LGPL-3.0-only\"},\"contracts/interfaces/INonceManager.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\ninterface INonceManager {\\n    event NonceChange(uint256 _space, uint256 _newNonce);\\n\\n    /**\\n     * @notice Returns the next nonce of the given nonce space\\n     * @param _space Nonce space, each space keeps an independent nonce count\\n     * @return The next nonce\\n     */\\n    function readNonce(uint256 _space) external view returns (uint256);\\n}\\n\",\"keccak256\":\"0xd98d903dfeb3283b438182585b08b6af957aae66be54d19ad464be57e18efccc\",\"license\":\"LGPL-3.0-only\"},\"contracts/interfaces/ISignatureValidator.sol\":{\"content\":\"// SPDX-License-Identifier: LGPL-3.0-only\\npragma solidity >=0.7.0 <0.9.0;\\n\\ncontract ISignatureValidatorConstants {\\n    // bytes4(keccak256(\\\"isValidSignature(bytes,bytes)\\\")\\n    bytes4 internal constant EIP1271_MAGIC_VALUE = 0x20c13b0b;\\n}\\n\\nabstract contract ISignatureValidator is ISignatureValidatorConstants {\\n    /**\\n     * @dev Should return whether the signature provided is valid for the provided data\\n     * @param _data Arbitrary length data signed on the behalf of address(this)\\n     * @param _signature Signature byte array associated with _data\\n     *\\n     * MUST return the bytes4 magic value 0x20c13b0b when function passes.\\n     * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)\\n     * MUST allow external calls\\n     */\\n    function isValidSignature(bytes calldata _data, bytes calldata _signature)\\n        public\\n        view\\n        virtual\\n        returns (bytes4);\\n}\\n\",\"keccak256\":\"0x08aa9cb79a05c096dae42d7125462048322bd10792a444fe2d53b32411b88a81\",\"license\":\"LGPL-3.0-only\"}},\"version\":1}",
+  "bytecode": "0x60a060405234801561001057600080fd5b50604051611be3380380611be383398101604081905261002f91610040565b6001600160a01b0316608052610070565b60006020828403121561005257600080fd5b81516001600160a01b038116811461006957600080fd5b9392505050565b608051611b436100a060003960008181610408015281816104520152818161108a01526112580152611b436000f3fe60806040526004361061016a5760003560e01c80639a199a4f116100d1578063cb103d701161008a578063eb76171811610064578063eb761718146104dd578063f08a0323146104fd578063f698da251461051d578063ffa1ad7414610584576101a6565b8063cb103d7014610489578063e009cfde1461049d578063e19a9dd9146104bd576101a6565b80639a199a4f146103b0578063a71d052b146103d0578063affed0e0146103e4578063b0d691fe146103f9578063b3080c2414610440578063b9b33cb714610474576101a6565b80634b819ba4116101235780634b819ba4146102e05780635229073f1461030057806356cdfb6f1461032e578063610b5925146103505780638aa26d4b146103705780638c3f556314610390576101a6565b80632d9ad53d1461020c5780633408e470146102415780633659cfe61461025e5780633a871cdd14610280578063468721a7146102a05780634b574a02146102c0576101a6565b366101a65760405134815233907f9820dd13494dd7d9f03807aa0bb724fe8266855b5ac4db99848a199904f8074b9060200160405180910390a2005b3480156101b257600080fd5b507f6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d58054806101dd57005b36600080373360601b365260008060143601600080855af190503d6000803e80610206573d6000fd5b503d6000f35b34801561021857600080fd5b5061022c610227366004611537565b6105c2565b60405190151581526020015b60405180910390f35b34801561024d57600080fd5b50465b604051908152602001610238565b34801561026a57600080fd5b5061027e610279366004611537565b6105fd565b005b34801561028c57600080fd5b5061025061029b366004611554565b6106bc565b3480156102ac57600080fd5b5061022c6102bb36600461169c565b6106e8565b3480156102cc57600080fd5b5061022c6102db366004611537565b6107c1565b3480156102ec57600080fd5b5061027e6102fb36600461171e565b610849565b34801561030c57600080fd5b5061032061031b36600461169c565b61092c565b6040516102389291906117b7565b34801561033a57600080fd5b50610343610962565b60405161023891906117d2565b34801561035c57600080fd5b5061027e61036b366004611537565b610ab9565b34801561037c57600080fd5b5061027e61038b36600461181f565b610bff565b34801561039c57600080fd5b506102506103ab366004611854565b610ce0565b3480156103bc57600080fd5b5061027e6103cb36600461181f565b610d0c565b3480156103dc57600080fd5b50600161022c565b3480156103f057600080fd5b50610250610d77565b34801561040557600080fd5b507f00000000000000000000000000000000000000000000000000000000000000005b6040516001600160a01b039091168152602001610238565b34801561044c57600080fd5b506104287f000000000000000000000000000000000000000000000000000000000000000081565b34801561048057600080fd5b5061027e610d88565b34801561049557600080fd5b503054610428565b3480156104a957600080fd5b5061027e6104b836600461186d565b610e3c565b3480156104c957600080fd5b5061027e6104d8366004611537565b610f67565b3480156104e957600080fd5b5061027e6104f83660046118b4565b610fcc565b34801561050957600080fd5b5061027e610518366004611537565b610fdd565b34801561052957600080fd5b5061025060007f47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a794692184660408051602081019390935282015230606082015260800160405160208183030381529060405280519060200120905090565b34801561059057600080fd5b506105b560405180604001604052806005815260200164302e302e3160d81b81525081565b60405161023891906119fd565b600060016001600160a01b038316148015906105f757506001600160a01b038281166000908152600160205260409020541615155b92915050565b610605611046565b806001600160a01b031663a71d052b6040518163ffffffff1660e01b8152600401602060405180830381865afa158015610643573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106679190611a10565b6106b15760405162461bcd60e51b81526020600482015260166024820152752737ba10309029b7b234bab69039b4b733b632ba37b760511b60448201526064015b60405180910390fd5b6106b9813055565b50565b60006106c661107f565b5060006106d66040850185611a2d565b50506106e1826110f7565b9392505050565b6000336001148015906107125750336000908152600160205260409020546001600160a01b031615155b6107485760405162461bcd60e51b815260206004820152600760248201526614d113534c4c0d60ca1b60448201526064016106a8565b610755858585855a611150565b9050801561078d5760405133907f6895c13664aa4f67288b25d7a21d7aaa34916e355fb9b6fae0a139a9085becb890600090a26107b9565b60405133907facd2c8702804128fdb0db2bb49f6d127dd0181c13fd45dbfe16de0930e2bd37590600090a25b949350505050565b60006001600160a01b0382166107d957506000919050565b60006107e3610962565b905060005b815181101561083f5781818151811061080357610803611a7b565b60200260200101516001600160a01b0316846001600160a01b03160361082d575060019392505050565b8061083781611a91565b9150506107e8565b5060009392505050565b60035460ff16156108925760405162461bcd60e51b8152602060048201526013602482015272105b1c9958591e481a5b9a5d1a585b1a5e9959606a1b60448201526064016106a8565b6001600160a01b0381166108e85760405162461bcd60e51b815260206004820152601960248201527f52657175697265642066616c6c6261636b2068616e646c65720000000000000060448201526064016106a8565b6003805460ff1916600117905561091d817f6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d555565b6109278383611197565b505050565b6000606061093c868686866106e8565b915060405160203d0181016040523d81523d6000602083013e8091505094509492505050565b6040805160038082526080820190925260609160009190602082018480368337505063eaf7652f60e01b600090815260026020527fcef516f59394dcea6f690864bc4b308ea8af47bff3ce7155948d621ccc0bd2795483519394506001600160a01b0316928492506109d6576109d6611a7b565b6001600160a01b039283166020918202929092018101919091526304701feb60e31b600052600290527f84adbd5779b53219abc08c6a0721310eceb23df12233a77fc0d8a950b6fba16454825191169082906001908110610a3957610a39611a7b565b6001600160a01b039283166020918202929092018101919091526324108c8f60e21b6000526002908190527fe78882b8c3d591c252f166fa92ca2f5fe1ed6e04cf3f3e36bf49f4edcd2ab2b15483519216918391908110610a9c57610a9c611a7b565b6001600160a01b0390921660209283029190910190910152919050565b610ac1611046565b6001600160a01b03811615801590610ae357506001600160a01b038116600114155b610b195760405162461bcd60e51b815260206004820152600760248201526653444d4d31303160c81b60448201526064016106a8565b6001600160a01b038181166000908152600160205260409020541615610b6b5760405162461bcd60e51b815260206004820152600760248201526629a226a698981960c91b60448201526064016106a8565b600160208181527fcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f80546001600160a01b03858116600081815260408082208054949095166001600160a01b031994851617909455959095528254168417909155519182527fecdf3a3effea5783a3c4c2140e677577666428d44ed9d474a0b3a4c9943f844091015b60405180910390a150565b610c07611046565b6001600160e01b031981166000908152600260205260409020546001600160a01b03838116911614610c7b5760405162461bcd60e51b815260206004820152601860248201527f706c6174666f726d2073657373696f6e2065787069726564000000000000000060448201526064016106a8565b6001600160e01b031981166000908152600260205260409081902080546001600160a01b0319169055517f43853b1cc6094f8d7cd366a448173e51c7eeb87b51d3afe860100d38101f376590610cd49084908490611ab8565b60405180910390a15050565b60006105f77f1ec7ef52f8bbd89fae80c55c6884305d3fb5ef41070638221dac337a4377b7df83611204565b610d14611046565b6001600160e01b031981166000908152600260205260409020546001600160a01b031615610d69576001600160e01b03198116600090815260026020526040902054610d69906001600160a01b031682610bff565b610d738282611197565b5050565b6000610d836000610ce0565b905090565b610d90611046565b600160008190526020527fcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f546001600160a01b031615610dfc5760405162461bcd60e51b8152602060048201526007602482015266053444d4d3130360cc1b60448201526064016106a8565b6001600081905260208190527fcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f80546001600160a01b0319169091179055565b610e44611046565b6001600160a01b03811615801590610e6657506001600160a01b038116600114155b610e9c5760405162461bcd60e51b815260206004820152600760248201526653444d4d31303160c81b60448201526064016106a8565b6001600160a01b03828116600090815260016020526040902054811690821614610ef25760405162461bcd60e51b815260206004820152600760248201526653444d4d31303360c81b60448201526064016106a8565b6001600160a01b038181166000818152600160209081526040808320805488871685528285208054919097166001600160a01b03199182161790965592849052825490941690915591519081527faab4fa2b463f581b2b32cb3b7e3b704b9ce37cc209b5fb4d77e593ace40542769101610cd4565b610f6f611046565b7f4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c88181556040516001600160a01b03831681527f1151116914515bc0891ff9047a6cb32cf902546f83066499bcf8ba33d2353fa290602001610cd4565b610fd4611244565b6106b9816112c6565b610fe5611046565b61100d817f6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d555565b6040516001600160a01b03821681527f5ac6c46c93c8d0e53714ba3b53db3e7c046da994313d7ed0d192028bc7c228b090602001610bf4565b33301461107d5760405162461bcd60e51b8152602060048201526005602482015264475330333160d81b60448201526064016106a8565b565b336001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000161461107d5760405162461bcd60e51b815260206004820152601c60248201527f6163636f756e743a206e6f742066726f6d20456e747279506f696e740000000060448201526064016106a8565b80156106b957604051600090339060001990849084818181858888f193505050503d8060008114611144576040519150601f19603f3d011682016040523d82523d6000602084013e611149565b606091505b5050505050565b6000600183600181111561116657611166611adb565b0361117e576000808551602087018986f4905061118e565b600080855160208701888a87f190505b95945050505050565b6111a081611499565b6001600160e01b031981166000908152600260205260409081902080546001600160a01b0319166001600160a01b038516179055517f032ab7f5ec464dc9f1ac11837a6f0e506cdca8a7850aa5eb37510e221c1e0e3d90610cd49084908490611ab8565b6000808383604051602001611223929190918252602082015260400190565b60408051601f19818403018152919052805160209091012054949350505050565b3330148061127a5750336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016145b61107d5760405162461bcd60e51b815260206004820152601e60248201527f6f6e6c7920656e747279506f696e74206f722077616c6c65742073656c66000060448201526064016106a8565b60005b8151811015610d735760008282815181106112e6576112e6611a7b565b602002602001015190506000606082604001515a10156113415760405162461bcd60e51b8152602060048201526016602482015275536f6469756d3a204e4f545f454e4f5547485f47415360501b60448201526064016106a8565b60018351600181111561135657611356611adb565b036113df5782606001516001600160a01b0316836040015160001461137f578360400151611381565b5a5b8460a001516040516113939190611af1565b6000604051808303818686f4925050503d80600081146113cf576040519150601f19603f3d011682016040523d82523d6000602084013e6113d4565b606091505b509092509050611467565b82606001516001600160a01b03168360800151846040015160001461140857846040015161140a565b5a5b908560a0015160405161141d9190611af1565b600060405180830381858888f193505050503d806000811461145b576040519150601f19603f3d011682016040523d82523d6000602084013e611460565b606091505b5090925090505b81158015611476575082602001515b1561148357805160208201fd5b505050808061149190611a91565b9150506112c9565b6001600160e01b0319811663eaf7652f60e01b14806114c857506001600160e01b031981166304701feb60e31b145b806114e357506001600160e01b031981166324108c8f60e21b145b6106b95760405162461bcd60e51b815260206004820152601060248201526f696e76616c696420706c6174666f726d60801b60448201526064016106a8565b6001600160a01b03811681146106b957600080fd5b60006020828403121561154957600080fd5b81356106e181611522565b60008060006060848603121561156957600080fd5b833567ffffffffffffffff81111561158057600080fd5b8401610160818703121561159357600080fd5b95602085013595506040909401359392505050565b634e487b7160e01b600052604160045260246000fd5b60405160c0810167ffffffffffffffff811182821017156115e1576115e16115a8565b60405290565b604051601f8201601f1916810167ffffffffffffffff81118282101715611610576116106115a8565b604052919050565b600082601f83011261162957600080fd5b813567ffffffffffffffff811115611643576116436115a8565b611656601f8201601f19166020016115e7565b81815284602083860101111561166b57600080fd5b816020850160208301376000918101602001919091529392505050565b80356002811061169757600080fd5b919050565b600080600080608085870312156116b257600080fd5b84356116bd81611522565b935060208501359250604085013567ffffffffffffffff8111156116e057600080fd5b6116ec87828801611618565b9250506116fb60608601611688565b905092959194509250565b80356001600160e01b03198116811461169757600080fd5b60008060006060848603121561173357600080fd5b833561173e81611522565b925061174c60208501611706565b9150604084013561175c81611522565b809150509250925092565b60005b8381101561178257818101518382015260200161176a565b50506000910152565b600081518084526117a3816020860160208601611767565b601f01601f19169290920160200192915050565b82151581526040602082015260006107b9604083018461178b565b6020808252825182820181905260009190848201906040850190845b818110156118135783516001600160a01b0316835292840192918401916001016117ee565b50909695505050505050565b6000806040838503121561183257600080fd5b823561183d81611522565b915061184b60208401611706565b90509250929050565b60006020828403121561186657600080fd5b5035919050565b6000806040838503121561188057600080fd5b823561188b81611522565b9150602083013561189b81611522565b809150509250929050565b80151581146106b957600080fd5b600060208083850312156118c757600080fd5b823567ffffffffffffffff808211156118df57600080fd5b818501915085601f8301126118f357600080fd5b813581811115611905576119056115a8565b8060051b6119148582016115e7565b918252838101850191858101908984111561192e57600080fd5b86860192505b838310156119f05782358581111561194c5760008081fd5b860160c0818c03601f19018113156119645760008081fd5b61196c6115be565b6119778a8401611688565b8152604080840135611988816118a6565b808c840152506060808501358284015260809150818501356119a981611522565b9083015260a084810135828401529284013592898411156119cc57600091508182fd5b6119da8f8d86880101611618565b9083015250845250509186019190860190611934565b9998505050505050505050565b6020815260006106e1602083018461178b565b600060208284031215611a2257600080fd5b81516106e1816118a6565b6000808335601e19843603018112611a4457600080fd5b83018035915067ffffffffffffffff821115611a5f57600080fd5b602001915036819003821315611a7457600080fd5b9250929050565b634e487b7160e01b600052603260045260246000fd5b600060018201611ab157634e487b7160e01b600052601160045260246000fd5b5060010190565b6001600160a01b039290921682526001600160e01b031916602082015260400190565b634e487b7160e01b600052602160045260246000fd5b60008251611b03818460208701611767565b919091019291505056fea2646970667358221220f5ae9f02f221d1fd0e07bb6bf8982b66ed75cecc1f9f9f11d84edabf61bfde1a64736f6c63430008110033",
+  "deployedBytecode": "0x60806040526004361061016a5760003560e01c80639a199a4f116100d1578063cb103d701161008a578063eb76171811610064578063eb761718146104dd578063f08a0323146104fd578063f698da251461051d578063ffa1ad7414610584576101a6565b8063cb103d7014610489578063e009cfde1461049d578063e19a9dd9146104bd576101a6565b80639a199a4f146103b0578063a71d052b146103d0578063affed0e0146103e4578063b0d691fe146103f9578063b3080c2414610440578063b9b33cb714610474576101a6565b80634b819ba4116101235780634b819ba4146102e05780635229073f1461030057806356cdfb6f1461032e578063610b5925146103505780638aa26d4b146103705780638c3f556314610390576101a6565b80632d9ad53d1461020c5780633408e470146102415780633659cfe61461025e5780633a871cdd14610280578063468721a7146102a05780634b574a02146102c0576101a6565b366101a65760405134815233907f9820dd13494dd7d9f03807aa0bb724fe8266855b5ac4db99848a199904f8074b9060200160405180910390a2005b3480156101b257600080fd5b507f6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d58054806101dd57005b36600080373360601b365260008060143601600080855af190503d6000803e80610206573d6000fd5b503d6000f35b34801561021857600080fd5b5061022c610227366004611537565b6105c2565b60405190151581526020015b60405180910390f35b34801561024d57600080fd5b50465b604051908152602001610238565b34801561026a57600080fd5b5061027e610279366004611537565b6105fd565b005b34801561028c57600080fd5b5061025061029b366004611554565b6106bc565b3480156102ac57600080fd5b5061022c6102bb36600461169c565b6106e8565b3480156102cc57600080fd5b5061022c6102db366004611537565b6107c1565b3480156102ec57600080fd5b5061027e6102fb36600461171e565b610849565b34801561030c57600080fd5b5061032061031b36600461169c565b61092c565b6040516102389291906117b7565b34801561033a57600080fd5b50610343610962565b60405161023891906117d2565b34801561035c57600080fd5b5061027e61036b366004611537565b610ab9565b34801561037c57600080fd5b5061027e61038b36600461181f565b610bff565b34801561039c57600080fd5b506102506103ab366004611854565b610ce0565b3480156103bc57600080fd5b5061027e6103cb36600461181f565b610d0c565b3480156103dc57600080fd5b50600161022c565b3480156103f057600080fd5b50610250610d77565b34801561040557600080fd5b507f00000000000000000000000000000000000000000000000000000000000000005b6040516001600160a01b039091168152602001610238565b34801561044c57600080fd5b506104287f000000000000000000000000000000000000000000000000000000000000000081565b34801561048057600080fd5b5061027e610d88565b34801561049557600080fd5b503054610428565b3480156104a957600080fd5b5061027e6104b836600461186d565b610e3c565b3480156104c957600080fd5b5061027e6104d8366004611537565b610f67565b3480156104e957600080fd5b5061027e6104f83660046118b4565b610fcc565b34801561050957600080fd5b5061027e610518366004611537565b610fdd565b34801561052957600080fd5b5061025060007f47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a794692184660408051602081019390935282015230606082015260800160405160208183030381529060405280519060200120905090565b34801561059057600080fd5b506105b560405180604001604052806005815260200164302e302e3160d81b81525081565b60405161023891906119fd565b600060016001600160a01b038316148015906105f757506001600160a01b038281166000908152600160205260409020541615155b92915050565b610605611046565b806001600160a01b031663a71d052b6040518163ffffffff1660e01b8152600401602060405180830381865afa158015610643573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106679190611a10565b6106b15760405162461bcd60e51b81526020600482015260166024820152752737ba10309029b7b234bab69039b4b733b632ba37b760511b60448201526064015b60405180910390fd5b6106b9813055565b50565b60006106c661107f565b5060006106d66040850185611a2d565b50506106e1826110f7565b9392505050565b6000336001148015906107125750336000908152600160205260409020546001600160a01b031615155b6107485760405162461bcd60e51b815260206004820152600760248201526614d113534c4c0d60ca1b60448201526064016106a8565b610755858585855a611150565b9050801561078d5760405133907f6895c13664aa4f67288b25d7a21d7aaa34916e355fb9b6fae0a139a9085becb890600090a26107b9565b60405133907facd2c8702804128fdb0db2bb49f6d127dd0181c13fd45dbfe16de0930e2bd37590600090a25b949350505050565b60006001600160a01b0382166107d957506000919050565b60006107e3610962565b905060005b815181101561083f5781818151811061080357610803611a7b565b60200260200101516001600160a01b0316846001600160a01b03160361082d575060019392505050565b8061083781611a91565b9150506107e8565b5060009392505050565b60035460ff16156108925760405162461bcd60e51b8152602060048201526013602482015272105b1c9958591e481a5b9a5d1a585b1a5e9959606a1b60448201526064016106a8565b6001600160a01b0381166108e85760405162461bcd60e51b815260206004820152601960248201527f52657175697265642066616c6c6261636b2068616e646c65720000000000000060448201526064016106a8565b6003805460ff1916600117905561091d817f6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d555565b6109278383611197565b505050565b6000606061093c868686866106e8565b915060405160203d0181016040523d81523d6000602083013e8091505094509492505050565b6040805160038082526080820190925260609160009190602082018480368337505063eaf7652f60e01b600090815260026020527fcef516f59394dcea6f690864bc4b308ea8af47bff3ce7155948d621ccc0bd2795483519394506001600160a01b0316928492506109d6576109d6611a7b565b6001600160a01b039283166020918202929092018101919091526304701feb60e31b600052600290527f84adbd5779b53219abc08c6a0721310eceb23df12233a77fc0d8a950b6fba16454825191169082906001908110610a3957610a39611a7b565b6001600160a01b039283166020918202929092018101919091526324108c8f60e21b6000526002908190527fe78882b8c3d591c252f166fa92ca2f5fe1ed6e04cf3f3e36bf49f4edcd2ab2b15483519216918391908110610a9c57610a9c611a7b565b6001600160a01b0390921660209283029190910190910152919050565b610ac1611046565b6001600160a01b03811615801590610ae357506001600160a01b038116600114155b610b195760405162461bcd60e51b815260206004820152600760248201526653444d4d31303160c81b60448201526064016106a8565b6001600160a01b038181166000908152600160205260409020541615610b6b5760405162461bcd60e51b815260206004820152600760248201526629a226a698981960c91b60448201526064016106a8565b600160208181527fcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f80546001600160a01b03858116600081815260408082208054949095166001600160a01b031994851617909455959095528254168417909155519182527fecdf3a3effea5783a3c4c2140e677577666428d44ed9d474a0b3a4c9943f844091015b60405180910390a150565b610c07611046565b6001600160e01b031981166000908152600260205260409020546001600160a01b03838116911614610c7b5760405162461bcd60e51b815260206004820152601860248201527f706c6174666f726d2073657373696f6e2065787069726564000000000000000060448201526064016106a8565b6001600160e01b031981166000908152600260205260409081902080546001600160a01b0319169055517f43853b1cc6094f8d7cd366a448173e51c7eeb87b51d3afe860100d38101f376590610cd49084908490611ab8565b60405180910390a15050565b60006105f77f1ec7ef52f8bbd89fae80c55c6884305d3fb5ef41070638221dac337a4377b7df83611204565b610d14611046565b6001600160e01b031981166000908152600260205260409020546001600160a01b031615610d69576001600160e01b03198116600090815260026020526040902054610d69906001600160a01b031682610bff565b610d738282611197565b5050565b6000610d836000610ce0565b905090565b610d90611046565b600160008190526020527fcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f546001600160a01b031615610dfc5760405162461bcd60e51b8152602060048201526007602482015266053444d4d3130360cc1b60448201526064016106a8565b6001600081905260208190527fcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f80546001600160a01b0319169091179055565b610e44611046565b6001600160a01b03811615801590610e6657506001600160a01b038116600114155b610e9c5760405162461bcd60e51b815260206004820152600760248201526653444d4d31303160c81b60448201526064016106a8565b6001600160a01b03828116600090815260016020526040902054811690821614610ef25760405162461bcd60e51b815260206004820152600760248201526653444d4d31303360c81b60448201526064016106a8565b6001600160a01b038181166000818152600160209081526040808320805488871685528285208054919097166001600160a01b03199182161790965592849052825490941690915591519081527faab4fa2b463f581b2b32cb3b7e3b704b9ce37cc209b5fb4d77e593ace40542769101610cd4565b610f6f611046565b7f4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c88181556040516001600160a01b03831681527f1151116914515bc0891ff9047a6cb32cf902546f83066499bcf8ba33d2353fa290602001610cd4565b610fd4611244565b6106b9816112c6565b610fe5611046565b61100d817f6c9a6c4a39284e37ed1cf53d337577d14212a4870fb976a4366c693b939918d555565b6040516001600160a01b03821681527f5ac6c46c93c8d0e53714ba3b53db3e7c046da994313d7ed0d192028bc7c228b090602001610bf4565b33301461107d5760405162461bcd60e51b8152602060048201526005602482015264475330333160d81b60448201526064016106a8565b565b336001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000161461107d5760405162461bcd60e51b815260206004820152601c60248201527f6163636f756e743a206e6f742066726f6d20456e747279506f696e740000000060448201526064016106a8565b80156106b957604051600090339060001990849084818181858888f193505050503d8060008114611144576040519150601f19603f3d011682016040523d82523d6000602084013e611149565b606091505b5050505050565b6000600183600181111561116657611166611adb565b0361117e576000808551602087018986f4905061118e565b600080855160208701888a87f190505b95945050505050565b6111a081611499565b6001600160e01b031981166000908152600260205260409081902080546001600160a01b0319166001600160a01b038516179055517f032ab7f5ec464dc9f1ac11837a6f0e506cdca8a7850aa5eb37510e221c1e0e3d90610cd49084908490611ab8565b6000808383604051602001611223929190918252602082015260400190565b60408051601f19818403018152919052805160209091012054949350505050565b3330148061127a5750336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016145b61107d5760405162461bcd60e51b815260206004820152601e60248201527f6f6e6c7920656e747279506f696e74206f722077616c6c65742073656c66000060448201526064016106a8565b60005b8151811015610d735760008282815181106112e6576112e6611a7b565b602002602001015190506000606082604001515a10156113415760405162461bcd60e51b8152602060048201526016602482015275536f6469756d3a204e4f545f454e4f5547485f47415360501b60448201526064016106a8565b60018351600181111561135657611356611adb565b036113df5782606001516001600160a01b0316836040015160001461137f578360400151611381565b5a5b8460a001516040516113939190611af1565b6000604051808303818686f4925050503d80600081146113cf576040519150601f19603f3d011682016040523d82523d6000602084013e6113d4565b606091505b509092509050611467565b82606001516001600160a01b03168360800151846040015160001461140857846040015161140a565b5a5b908560a0015160405161141d9190611af1565b600060405180830381858888f193505050503d806000811461145b576040519150601f19603f3d011682016040523d82523d6000602084013e611460565b606091505b5090925090505b81158015611476575082602001515b1561148357805160208201fd5b505050808061149190611a91565b9150506112c9565b6001600160e01b0319811663eaf7652f60e01b14806114c857506001600160e01b031981166304701feb60e31b145b806114e357506001600160e01b031981166324108c8f60e21b145b6106b95760405162461bcd60e51b815260206004820152601060248201526f696e76616c696420706c6174666f726d60801b60448201526064016106a8565b6001600160a01b03811681146106b957600080fd5b60006020828403121561154957600080fd5b81356106e181611522565b60008060006060848603121561156957600080fd5b833567ffffffffffffffff81111561158057600080fd5b8401610160818703121561159357600080fd5b95602085013595506040909401359392505050565b634e487b7160e01b600052604160045260246000fd5b60405160c0810167ffffffffffffffff811182821017156115e1576115e16115a8565b60405290565b604051601f8201601f1916810167ffffffffffffffff81118282101715611610576116106115a8565b604052919050565b600082601f83011261162957600080fd5b813567ffffffffffffffff811115611643576116436115a8565b611656601f8201601f19166020016115e7565b81815284602083860101111561166b57600080fd5b816020850160208301376000918101602001919091529392505050565b80356002811061169757600080fd5b919050565b600080600080608085870312156116b257600080fd5b84356116bd81611522565b935060208501359250604085013567ffffffffffffffff8111156116e057600080fd5b6116ec87828801611618565b9250506116fb60608601611688565b905092959194509250565b80356001600160e01b03198116811461169757600080fd5b60008060006060848603121561173357600080fd5b833561173e81611522565b925061174c60208501611706565b9150604084013561175c81611522565b809150509250925092565b60005b8381101561178257818101518382015260200161176a565b50506000910152565b600081518084526117a3816020860160208601611767565b601f01601f19169290920160200192915050565b82151581526040602082015260006107b9604083018461178b565b6020808252825182820181905260009190848201906040850190845b818110156118135783516001600160a01b0316835292840192918401916001016117ee565b50909695505050505050565b6000806040838503121561183257600080fd5b823561183d81611522565b915061184b60208401611706565b90509250929050565b60006020828403121561186657600080fd5b5035919050565b6000806040838503121561188057600080fd5b823561188b81611522565b9150602083013561189b81611522565b809150509250929050565b80151581146106b957600080fd5b600060208083850312156118c757600080fd5b823567ffffffffffffffff808211156118df57600080fd5b818501915085601f8301126118f357600080fd5b813581811115611905576119056115a8565b8060051b6119148582016115e7565b918252838101850191858101908984111561192e57600080fd5b86860192505b838310156119f05782358581111561194c5760008081fd5b860160c0818c03601f19018113156119645760008081fd5b61196c6115be565b6119778a8401611688565b8152604080840135611988816118a6565b808c840152506060808501358284015260809150818501356119a981611522565b9083015260a084810135828401529284013592898411156119cc57600091508182fd5b6119da8f8d86880101611618565b9083015250845250509186019190860190611934565b9998505050505050505050565b6020815260006106e1602083018461178b565b600060208284031215611a2257600080fd5b81516106e1816118a6565b6000808335601e19843603018112611a4457600080fd5b83018035915067ffffffffffffffff821115611a5f57600080fd5b602001915036819003821315611a7457600080fd5b9250929050565b634e487b7160e01b600052603260045260246000fd5b600060018201611ab157634e487b7160e01b600052601160045260246000fd5b5060010190565b6001600160a01b039290921682526001600160e01b031916602082015260400190565b634e487b7160e01b600052602160045260246000fd5b60008251611b03818460208701611767565b919091019291505056fea2646970667358221220f5ae9f02f221d1fd0e07bb6bf8982b66ed75cecc1f9f9f11d84edabf61bfde1a64736f6c63430008110033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "disableModule(address,address)": {
+        "details": "Allows to remove a module from the whitelist.      This can only be done via a Safe transaction.",
+        "params": {
+          "module": "Module to be removed.",
+          "prevModule": "Module that pointed to the module to be removed in the linked list"
+        }
+      },
+      "enableModule(address)": {
+        "details": "Allows to add a module to the whitelist.      This can only be done via a Safe transaction.",
+        "params": {
+          "module": "Module to be whitelisted."
+        }
+      },
+      "execTransactionFromModule(address,uint256,bytes,uint8)": {
+        "details": "Allows a Module to execute a Safe transaction without any further confirmations.",
+        "params": {
+          "data": "Data payload of module transaction.",
+          "operation": "Operation type of module transaction.",
+          "to": "Destination address of module transaction.",
+          "value": "Ether value of module transaction."
+        }
+      },
+      "execTransactionFromModuleReturnData(address,uint256,bytes,uint8)": {
+        "details": "Allows a Module to execute a Safe transaction without any further confirmations and return data",
+        "params": {
+          "data": "Data payload of module transaction.",
+          "operation": "Operation type of module transaction.",
+          "to": "Destination address of module transaction.",
+          "value": "Ether value of module transaction."
+        }
+      },
+      "execute((uint8,bool,uint256,address,uint256,bytes)[])": {
+        "details": "Relayers must ensure that the gasLimit specified for each transaction      is acceptable to them. A user could specify large enough that it could      consume all the gas available.",
+        "params": {
+          "_txs": "Transactions to process"
+        }
+      },
+      "getChainId()": {
+        "details": "Returns the chain id used by this contract."
+      },
+      "getSessionOwners()": {
+        "details": "Returns array of owners.",
+        "returns": {
+          "_0": "Array of session owners."
+        }
+      },
+      "getSingleton()": {
+        "returns": {
+          "_imp": "The address of the current Wallet implementation"
+        }
+      },
+      "isModuleEnabled(address)": {
+        "details": "Returns if an module is enabled",
+        "returns": {
+          "_0": "True if the module is enabled"
+        }
+      },
+      "nonce()": {
+        "details": "The default nonce space is 0x00",
+        "returns": {
+          "_0": "The next nonce"
+        }
+      },
+      "readNonce(uint256)": {
+        "params": {
+          "_space": "Nonce space, each space keeps an independent nonce count"
+        },
+        "returns": {
+          "_0": "The next nonce"
+        }
+      },
+      "setFallbackHandler(address)": {
+        "details": "Allows to add a contract to handle fallback calls.      Only fallback calls without value and with data will be forwarded.      This can only be done via a Safe transaction.",
+        "params": {
+          "handler": "contract to handle fallbacks calls."
+        }
+      },
+      "setGuard(address)": {
+        "details": "Set a guard that checks transactions before execution",
+        "params": {
+          "guard": "The address of the guard to be used or the 0 address to disable the guard"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "disableModule(address,address)": {
+        "notice": "Disables the module `module` for the Safe."
+      },
+      "enableModule(address)": {
+        "notice": "Enables the module `module` for the Safe."
+      },
+      "entryPoint()": {
+        "notice": "return the entryPoint used by this account. subclass should return the current entryPoint used by this account."
+      },
+      "execute((uint8,bool,uint256,address,uint256,bytes)[])": {
+        "notice": "Allow eip-4337 entryPoint or wallet self to execute an action"
+      },
+      "getSingleton()": {
+        "notice": "Returns the Wallet implementation"
+      },
+      "nonce()": {
+        "notice": "Returns the next nonce of the default nonce space"
+      },
+      "readNonce(uint256)": {
+        "notice": "Returns the next nonce of the given nonce space"
+      },
+      "validateUserOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)": {
+        "notice": "Validate user's signature and nonce. subclass doesn't need to override this method. Instead, it should override the specific internal validation methods."
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 14764,
+        "contract": "contracts/Sodium.sol:Sodium",
+        "label": "_singleton",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 14066,
+        "contract": "contracts/Sodium.sol:Sodium",
+        "label": "modules",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_address)"
+      },
+      {
+        "astId": 14498,
+        "contract": "contracts/Sodium.sol:Sodium",
+        "label": "sessionByPlatform",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes4,t_address)"
+      },
+      {
+        "astId": 13566,
+        "contract": "contracts/Sodium.sol:Sodium",
+        "label": "initialized",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_bool"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes4": {
+        "encoding": "inplace",
+        "label": "bytes4",
+        "numberOfBytes": "4"
+      },
+      "t_mapping(t_address,t_address)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_bytes4,t_address)": {
+        "encoding": "mapping",
+        "key": "t_bytes4",
+        "label": "mapping(bytes4 => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      }
+    }
+  }
+}
