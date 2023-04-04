@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "rm -rf ./cache && rm -rf ./artifacts && hardhat node",
     "build": "hardhat compile && yarn type",
+    "deploy": "hardhat deploy",
     "test": "NODE_ENV=test hardhat test",
     "type": "yarn type-build",
     "type-build": "rimraf gen/adapter && tsc -p ./tsconfig.adapter.json"

@@ -11,7 +11,6 @@
         "removeComments": false,
         "skipLibCheck": true,
         "strictNullChecks": true,
-        "noImplicitUseStrict": true,
         "noImplicitAny": false,
         "noImplicitReturns": true,
         "noImplicitThis": true,

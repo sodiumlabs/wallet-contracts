@@ -20,6 +20,20 @@ if (PK.length) {
 }
 
 const deterministicDeployment = (network: string) => {
+  if (parseInt(network) == 1337) {
+    return undefined;
+  }
+  if (parseInt(network) == 31337) {
+    return undefined;
+  }
+  if (parseInt(network) == 777) {
+    return {
+      factory: "0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7",
+      deployer: "0xE1CB04A0fA36DdD16a06ea828007E35e1a3cBC37",
+      signedTx: "0xf8a78085174876e800830186a08080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf3820135a085f489c94262e70d9568f4d99427fe4c8aa38bfc1db00284ba8335c577a83f73a0519952b3403cbddd02532b7a9747ff1612d1889b42a53c63e6b63c20026532a8",
+      funding: BigNumber.from(100000).mul(BigNumber.from(100000000000)).toString()
+    };
+  }
   const info = getSingletonFactoryInfo(parseInt(network));
   if (!info) {
     throw new Error(`
@@ -59,10 +73,19 @@ const config: HardhatUserConfig = {
   deterministicDeployment,
   networks: {
     hardhat: {
+      chainId: 31337,
     },
     mumbai: {
       ...sharedNetworkConfig,
       url: "https://polygon-mumbai.g.alchemy.com/v2/fIbA8DRSTQXPAhcHKiPFo19SPqhHNHam"
+    },
+    sodiumLocal: {
+      ...sharedNetworkConfig,
+      url: "http://localhost:26651"
+    },
+    sodiumt: {
+      ...sharedNetworkConfig,
+      url: "http://18.141.11.82:26651"
     },
     polygon: {
       ...sharedNetworkConfig,

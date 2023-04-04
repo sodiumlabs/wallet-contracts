@@ -6,15 +6,6 @@ pragma solidity ^0.8.12;
 
 import "../eip4337/core/BasePaymaster.sol";
 
-/**
- * A sample paymaster that uses external service to decide whether to pay for the UserOp.
- * The paymaster trusts an external signer to sign the transaction.
- * The calling user must pass the UserOp to that external signer first, which performs
- * whatever off-chain verification before signing the UserOp.
- * Note that this signature is NOT a replacement for the account-specific signature:
- * - the paymaster checks a signature to agree to PAY for GAS.
- * - the account checks a signature to prove identity and account ownership.
- */
 contract DeployPaymaster is BasePaymaster {
     using UserOperationLib for UserOperation;
 

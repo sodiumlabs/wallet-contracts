@@ -5,6 +5,7 @@ import "../interfaces/ERC1155TokenReceiver.sol";
 import "../interfaces/ERC721TokenReceiver.sol";
 import "../interfaces/ERC777TokensRecipient.sol";
 import "../interfaces/IERC165.sol";
+import "../chain/ISEP20Receiver.sol";
 
 /// @title Default Callback Handler - returns true for known token callbacks
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -12,6 +13,7 @@ contract DefaultCallbackHandler is
     ERC1155TokenReceiver,
     ERC777TokensRecipient,
     ERC721TokenReceiver,
+    ISEP20Receiver,
     IERC165
 {
     string public constant NAME = "Default Callback Handler";
@@ -35,6 +37,15 @@ contract DefaultCallbackHandler is
         bytes calldata
     ) external pure override returns (bytes4) {
         return 0xbc197c81;
+    }
+
+    function onSEP20Received(
+        address operator,
+        address from,
+        uint256 amount,
+        bytes calldata data
+    ) external returns (bytes4) {
+        return this.onSEP20Received.selector;
     }
 
     function onERC721Received(

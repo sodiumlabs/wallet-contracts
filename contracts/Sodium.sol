@@ -56,8 +56,8 @@ contract Sodium is
     address public immutable _entryPoint;
 
     // This constructor ensures that this contract can only be used as a master copy for Proxy contracts
-    constructor(IEntryPoint entryPoint) {
-        _entryPoint = address(entryPoint);
+    constructor(IEntryPoint entryPoint_) {
+        _entryPoint = address(entryPoint_);
     }
 
     function setup(
