@@ -1,13 +1,3 @@
-# Sample Hardhat Project
+# Sodium wallet contracts
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+It is a smart contract wallet based on eip-4337, which uses MPC recovery and on-chain 2FA to secure users' assets and simplify the access to dapps for users
