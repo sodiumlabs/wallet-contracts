@@ -77,18 +77,27 @@ const config: HardhatUserConfig = {
     },
     mumbai: {
       ...sharedNetworkConfig,
+      chainId: 80001,
       url: "https://polygon-mumbai.g.alchemy.com/v2/fIbA8DRSTQXPAhcHKiPFo19SPqhHNHam"
+    },
+    goerliarbitrum: {
+      ...sharedNetworkConfig,
+      chainId: 421613,
+      url: "https://goerli-rollup.arbitrum.io/rpc",
     },
     sodiumLocal: {
       ...sharedNetworkConfig,
+      chainId: 777,
       url: "http://localhost:26651"
     },
     sodiumt: {
       ...sharedNetworkConfig,
+      chainId: 777,
       url: "http://18.141.11.82:26651"
     },
     polygon: {
       ...sharedNetworkConfig,
+      chainId: 137,
       url: "https://polygon-mainnet.g.alchemy.com/v2/y48IcelCwZwwppoj-CXBEwmIjBOZ2ZLt"
     }
   }

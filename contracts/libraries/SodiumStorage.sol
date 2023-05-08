@@ -8,7 +8,7 @@ contract SodiumStorage {
     // From /common/ModuleManager.sol
     mapping(address => bool) internal modules;
 
-    // kecc256("pc|mobile|web") => session pubkey address
+    // From /base/SessionManager.sol
     mapping(bytes4 => address) internal sessionByPlatform;
 
     // From /Sodium.sol

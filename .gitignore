@@ -11,3 +11,4 @@ artifacts
 build
 .secret
 .DS_Store
+init-operators.ts

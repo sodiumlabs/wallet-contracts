@@ -19,13 +19,19 @@ contract ERC1155Token {
         @param id ID of the token
         @return The owner's balance of the token type requested
      */
-    function balanceOf(address owner, uint256 id) public view returns (uint256) {
-        require(owner != address(0), "ERC1155: balance query for the zero address");
+    function balanceOf(
+        address owner,
+        uint256 id
+    ) public view returns (uint256) {
+        require(
+            owner != address(0),
+            "ERC1155: balance query for the zero address"
+        );
         return _balances[id][owner];
     }
 
     /**
-        @dev Transfers `value` amount of an `id` from the `from` address to the `to` address specified.
+    @dev Transfers `value` amount of an `id` from the `from` address to the `to` address specified.
         Caller must be approved to manage the tokens being transferred out of the `from` account.
         If `to` is a smart contract, will call `onERC1155Received` on `to` and act appropriately.
         @param from Source address
@@ -70,7 +76,14 @@ contract ERC1155Token {
 
         _balances[id][to] = value + _balances[id][to];
 
-        _doSafeTransferAcceptanceCheck(msg.sender, address(0), to, id, value, data);
+        _doSafeTransferAcceptanceCheck(
+            msg.sender,
+            address(0),
+            to,
+            id,
+            value,
+            data
+        );
     }
 
     function isContract(address account) internal view returns (bool) {
@@ -96,8 +109,13 @@ contract ERC1155Token {
     ) internal {
         if (isContract(to)) {
             require(
-                ERC1155TokenReceiver(to).onERC1155Received(operator, from, id, value, data) ==
-                    ERC1155TokenReceiver(to).onERC1155Received.selector,
+                ERC1155TokenReceiver(to).onERC1155Received(
+                    operator,
+                    from,
+                    id,
+                    value,
+                    data
+                ) == ERC1155TokenReceiver(to).onERC1155Received.selector,
                 "ERC1155: got unknown value from onERC1155Received"
             );
         }

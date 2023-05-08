@@ -4,16 +4,20 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./base/ModuleManager.sol";
 import "./base/SessionManager.sol";
 import "./base/FallbackManager.sol";
-import "./base/GuardManager.sol";
+import "./base/SecurityManager.sol";
 import "./common/Singleton.sol";
 import "./common/EtherPaymentFallback.sol";
+import "./interfaces/IERC20Paymaster.sol";
+import "./interfaces/IModule.sol";
 import "./interfaces/ISignatureValidator.sol";
-import "./external/GnosisSafeMath.sol";
 import "./eip4337/core/BaseAccount.sol";
 import "./eip4337/interfaces/IEntryPoint.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./base/NonceManager.sol";
 import "./common/Enum.sol";
+import "./chain/ISodiumAuth.sol";
+import "./securityengine/IUserOperationValidator.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 struct Transaction {
     Enum.Operation op; // Performs delegatecall
@@ -28,16 +32,12 @@ contract Sodium is
     Singleton,
     ModuleManager,
     SessionManager,
-    NonceManager,
-    ISignatureValidatorConstants,
     FallbackManager,
-    GuardManager,
+    SecurityManager,
     BaseAccount,
-    EtherPaymentFallback
+    EtherPaymentFallback,
+    ISignatureValidatorConstants
 {
-    using ECDSA for bytes32;
-    using GnosisSafeMath for uint256;
-
     string public constant VERSION = "0.0.1";
 
     // keccak256(
@@ -45,12 +45,6 @@ contract Sodium is
     // );
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
         0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
-
-    event SodiumSetup(
-        address indexed sessionOwner,
-        bytes4 platform,
-        address fallbackHandler
-    );
 
     bool private initialized;
     address public immutable _entryPoint;
@@ -61,24 +55,16 @@ contract Sodium is
     }
 
     function setup(
-        address _sessionOwner,
-        bytes4 _platform,
-        address _fallbackHandler
+        ISodiumAuth _sodiumAuth,
+        address _fallbackHandler,
+        address _opValidator
     ) public {
         require(!initialized, "Already initialized");
         require(_fallbackHandler != address(0), "Required fallback handler");
         initialized = true;
         internalSetFallbackHandler(_fallbackHandler);
-        internalAddSession(_sessionOwner, _platform);
-    }
-
-    /**
-     * @notice Returns the next nonce of the default nonce space
-     * @dev The default nonce space is 0x00
-     * @return The next nonce
-     */
-    function nonce() public view override returns (uint256) {
-        return readNonce(0);
+        internalSetSodiumNetworkAuth(_sodiumAuth);
+        internalWriteUserOperationValidator(_opValidator);
     }
 
     function entryPoint() public view override returns (IEntryPoint) {
@@ -88,6 +74,45 @@ contract Sodium is
     function upgradeTo(Sodium newSingleton) external authorized {
         require(newSingleton.isSodiumSingleton(), "Not a Sodium singleton");
         _setSingleton(address(newSingleton));
+    }
+
+    function _approvePaymasterToken(UserOperation calldata userOp) private {
+        bytes calldata paymasterAndData = userOp.paymasterAndData;
+        if (paymasterAndData.length != 20 + 4 + 20) {
+            return;
+        } else if (bytes4(paymasterAndData[20:24]) == bytes4(0x095ea7b3)) {
+            IERC20Paymaster paymaster = IERC20Paymaster(
+                address(bytes20(paymasterAndData[:20]))
+            );
+
+            IERC20 payToken = IERC20(address(bytes20(paymasterAndData[24:])));
+
+            (uint256 miniAllowance, uint256 suggestApproveValue) = paymaster
+                .getTokenAllowanceCast(payToken);
+
+            if (
+                payToken.allowance(address(this), address(paymaster)) <
+                miniAllowance
+            ) {
+                payToken.approve(address(paymaster), suggestApproveValue);
+            }
+        }
+    }
+
+    /**
+     * Validate user's signature and nonce.
+     * subclass doesn't need to override this method. Instead, it should override the specific internal validation methods.
+     */
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    ) external virtual override returns (uint256 validationData) {
+        _requireFromEntryPoint();
+        validationData = _validateSignature(userOp, userOpHash);
+        _validateNonce(userOp.nonce);
+        _payPrefund(missingAccountFunds);
+        _approvePaymasterToken(userOp);
     }
 
     /**
@@ -107,26 +132,64 @@ contract Sodium is
         UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal override returns (uint256 validationData) {
-        // validate the signature is valid for this message.
-    }
+        bytes4 methodId = bytes4(userOp.callData[0:4]);
+        bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
+        address signer = ECDSA.recover(ethHash, userOp.signature);
 
-    /**
-     * validate the current nonce matches the UserOperation nonce.
-     * then it should update the account's state to prevent replay of this UserOperation.
-     * called only if initCode is empty (since "nonce" field is used as "salt" on account creation)
-     * @param userOp the op to validate.
-     */
-    function _validateAndUpdateNonce(
-        UserOperation calldata userOp
-    ) internal override {
-        // _validateNonce(userOp.nonce);
-    }
+        if (methodId == this.executeWithSodiumAuthRecover.selector) {
+            address sessionKey;
+            bytes memory addressBytes = userOp.callData[16:36];
+            assembly {
+                sessionKey := mload(add(addressBytes, 20))
+            }
+            return sessionKey == signer ? 0 : 1;
+        }
 
-    function _requireFromAdmin() internal view {
-        require(
-            msg.sender == address(this) || msg.sender == address(_entryPoint),
-            "only entryPoint or wallet self"
-        );
+        if (methodId == this.executeWithSodiumAuthSession.selector) {
+            address sessionKey;
+            bytes memory addressBytes = userOp.callData[16:36];
+            assembly {
+                sessionKey := mload(add(addressBytes, 20))
+            }
+
+            bool isSafe = _safeSession.owner == address(0);
+            IUserOperationValidator validator = internalReadUserOperationValidator();
+            if (!isSafe) {
+                // Use the on-chain security center to verify that the operation is secure.
+                // Allow session access if safe
+                isSafe = validator.validateUserOp(userOp) < 2;
+            }
+            return sessionKey == signer && isSafe ? 0 : 1;
+        }
+
+        if (methodId == this.executeWithModule.selector) {
+            address module;
+            bytes memory addressBytes = userOp.callData[16:36];
+            assembly {
+                module := mload(add(addressBytes, 20))
+            }
+
+            // if no enabled modules
+            if (!isModuleEnabled(module)) {
+                return 1;
+            }
+
+            return IModule(module).validateSignature(userOp, userOpHash);
+        }
+
+        if (methodId == this.execute.selector) {
+            (bool existing, bool isSafe) = isSessionOwner(signer);
+
+            IUserOperationValidator validator = internalReadUserOperationValidator();
+            if (!isSafe) {
+                // Use the on-chain security center to verify that the operation is secure.
+                // Allow session access if safe
+                isSafe = validator.validateUserOp(userOp) < 2;
+            }
+            return existing && isSafe ? 0 : 1;
+        }
+
+        revert("invalid methodId");
     }
 
     /**
@@ -136,9 +199,69 @@ contract Sodium is
      *      consume all the gas available.
      * @param _txs Transactions to process
      */
-    function execute(Transaction[] memory _txs) public {
+    function execute(Transaction[] memory _txs) external {
         // only allow eip-4337 entryPoint or wallet self to execute an action
-        _requireFromAdmin();
+        _requireFromEntryPoint();
+        // Execute the transactions
+        _execute(_txs);
+    }
+
+    function executeWithSodiumAuthRecover(
+        Recover calldata _recover,
+        bytes calldata _authProof,
+        Transaction[] calldata _txs
+    ) external {
+        // only allow eip-4337 entryPoint or wallet self to execute an action
+        _requireFromEntryPoint();
+
+        // Validate the sodium auth proof
+        validateRecoverProof(_recover, _authProof);
+
+        // Setup the safe session
+        internalAddSafeSession(_recover.safeSessionKey);
+
+        // Execute the transactions
+        _execute(_txs);
+    }
+
+    // Support for calling modules from an account so that the module can use the account to pay gas
+    function executeWithModule(
+        address _module,
+        uint256 _value,
+        bytes memory _data
+    ) external {
+        // only allow eip-4337 entryPoint or wallet self to execute an action
+        _requireFromEntryPoint();
+        bool success;
+        bytes memory result;
+        (success, result) = _module.call{value: _value, gas: gasleft()}(_data);
+        if (!success) {
+            assembly {
+                revert(add(result, 0x20), mload(result))
+            }
+        }
+    }
+
+    function executeWithSodiumAuthSession(
+        AddSession calldata _addSession,
+        bytes calldata _authProof,
+        Transaction[] calldata _txs
+    ) external {
+        // only allow eip-4337 entryPoint or wallet self to execute an action
+        _requireFromEntryPoint();
+
+        // Validate the sodium auth proof
+        validateAddSessionProof(_addSession, _authProof);
+
+        Session memory session = Session({
+            owner: _addSession.sessionKey,
+            uniqueId: _addSession.sessionUniqueId,
+            expires: _addSession.sessionExpires
+        });
+
+        // Setup the session
+        internalAddOrUpdateSession(session);
+
         // Execute the transactions
         _execute(_txs);
     }

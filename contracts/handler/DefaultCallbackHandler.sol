@@ -4,8 +4,8 @@ pragma solidity >=0.7.0 <0.9.0;
 import "../interfaces/ERC1155TokenReceiver.sol";
 import "../interfaces/ERC721TokenReceiver.sol";
 import "../interfaces/ERC777TokensRecipient.sol";
-import "../interfaces/IERC165.sol";
 import "../chain/ISEP20Receiver.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /// @title Default Callback Handler - returns true for known token callbacks
 /// @author Richard Meissner - <richard@gnosis.pm>
@@ -40,11 +40,11 @@ contract DefaultCallbackHandler is
     }
 
     function onSEP20Received(
-        address operator,
-        address from,
-        uint256 amount,
-        bytes calldata data
-    ) external returns (bytes4) {
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return this.onSEP20Received.selector;
     }
 
@@ -68,13 +68,9 @@ contract DefaultCallbackHandler is
         // We implement this for completeness, doesn't really have any value
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external view virtual override returns (bool) {
         return
             interfaceId == type(ERC1155TokenReceiver).interfaceId ||
             interfaceId == type(ERC721TokenReceiver).interfaceId ||

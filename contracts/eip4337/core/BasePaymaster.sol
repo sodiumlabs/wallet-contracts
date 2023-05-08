@@ -16,9 +16,8 @@ import "./Helpers.sol";
 abstract contract BasePaymaster is IPaymaster, Ownable {
     IEntryPoint public immutable entryPoint;
 
-    constructor(IEntryPoint _entryPoint, address owner) {
+    constructor(IEntryPoint _entryPoint) {
         entryPoint = _entryPoint;
-        _transferOwnership(owner);
     }
 
     /// @inheritdoc IPaymaster
@@ -29,11 +28,6 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     ) external override returns (bytes memory context, uint256 validationData) {
         _requireFromEntryPoint();
         return _validatePaymasterUserOp(userOp, userOpHash, maxCost);
-    }
-
-    // revice native token
-    receive() external payable {
-        entryPoint.depositTo{value: msg.value}(address(this));
     }
 
     function _validatePaymasterUserOp(
@@ -77,7 +71,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     /**
      * add a deposit for this paymaster, used for paying for transaction fees
      */
-    function deposit() public payable {
+    function deposit() public virtual payable {
         entryPoint.depositTo{value: msg.value}(address(this));
     }
 
@@ -89,7 +83,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     function withdrawTo(
         address payable withdrawAddress,
         uint256 amount
-    ) public onlyOwner {
+    ) public virtual onlyOwner {
         entryPoint.withdrawTo(withdrawAddress, amount);
     }
 

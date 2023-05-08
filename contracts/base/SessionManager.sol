@@ -3,70 +3,78 @@ pragma solidity >=0.7.0 <0.9.0;
 import "../common/SelfAuthorized.sol";
 
 contract SessionManager is SelfAuthorized {
-    event AddedSession(address owner, bytes4 sessionKey);
-    event RemovedSession(address owner, bytes4 sessionKey);
+    event AddOrUpdateSession(Session session, bytes4 storageKey);
+    event ChangedSafeSession(address sessionOwner);
+    event RemovedSession(bytes4 storageKey);
 
-    bytes4 internal constant sessionPlatformPC = bytes4(keccak256("pc"));
-    bytes4 internal constant sessionPlatformMobile =
-        bytes4(keccak256("mobile"));
-    bytes4 internal constant sessionPlatformWeb = bytes4(keccak256("web"));
+    struct Session {
+        address owner;
+        bytes4 uniqueId;
+        uint64 expires;
+    }
 
-    // kecc256("pc|mobile|web") => session pubkey address
-    mapping(bytes4 => address) internal sessionByPlatform;
+    // uniqueId => session
+    mapping(bytes4 => Session) internal _sessions;
+    mapping(address => bytes4) internal _ownerToUniqueId;
 
-    function checkPlatform(bytes4 platform) internal pure {
+    // safe session
+    Session internal _safeSession;
+
+    function internalAddOrUpdateSession(Session memory session) internal {
         require(
-            platform == sessionPlatformPC ||
-                platform == sessionPlatformMobile ||
-                platform == sessionPlatformWeb,
-            "invalid platform"
+            session.owner != address(0),
+            "session owner cannot be zero address"
         );
-    }
-
-    function internalAddSession(address owner, bytes4 platform) internal {
-        checkPlatform(platform);
-        sessionByPlatform[platform] = owner;
-        emit AddedSession(owner, platform);
-    }
-
-    function addSession(address owner, bytes4 platform) public authorized {
-        if (sessionByPlatform[platform] != address(0)) {
-            removeSession(sessionByPlatform[platform], platform);
+        require(
+            session.expires > 0,
+            "session expires must be greater than zero"
+        );
+        Session memory oldSession = _sessions[session.uniqueId];
+        if (oldSession.owner != address(0)) {
+            delete _ownerToUniqueId[oldSession.owner];
         }
-        internalAddSession(owner, platform);
+        _sessions[session.uniqueId] = session;
+        _ownerToUniqueId[session.owner] = session.uniqueId;
+        emit AddOrUpdateSession(session, session.uniqueId);
     }
 
-    function removeSession(address owner, bytes4 platform) public authorized {
-        require(
-            sessionByPlatform[platform] == owner,
-            "platform session expired"
-        );
-        sessionByPlatform[platform] = address(0);
-        emit RemovedSession(owner, platform);
+    function internalAddSafeSession(address sessionOwner) internal {
+        // 0xb9d46422 = bytes4(keccak256("org.sodium.base.session.safe"))
+        Session memory session = Session(sessionOwner, bytes4(0xb9d46422), 0);
+        _safeSession = session;
+        emit ChangedSafeSession(sessionOwner);
     }
 
-    function isSessionOwner(address owner) public view returns (bool) {
-        // TODO
-        return true;
+    function addOrUpdateSession(Session memory session) public authorized {
+        internalAddOrUpdateSession(session);
+    }
+
+    function isSessionOwner(
+        address owner
+    ) public view returns (bool existing, bool isSafe) {
         if (owner == address(0)) {
-            return false;
+            return (false, false);
         }
-        address[] memory owners = getSessionOwners();
-        for (uint256 i = 0; i < owners.length; i++) {
-            if (owner == owners[i]) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    /// @dev Returns array of owners.
-    /// @return Array of session owners.
-    function getSessionOwners() public view returns (address[] memory) {
-        address[] memory array = new address[](3);
-        array[0] = sessionByPlatform[sessionPlatformPC];
-        array[1] = sessionByPlatform[sessionPlatformMobile];
-        array[2] = sessionByPlatform[sessionPlatformWeb];
-        return array;
+        bool safeExisting = _safeSession.owner != address(0);
+
+        if (owner == _safeSession.owner) {
+            return (true, true);
+        }
+
+        bytes4 uniqueId = _ownerToUniqueId[owner];
+        Session memory session = _sessions[uniqueId];
+        if (session.owner == address(0)) {
+            return (false, false);
+        }
+
+        // check expiration
+        if (session.expires > 0 && session.expires < block.timestamp) {
+            return (false, false);
+        }
+
+        // 如果用户不存在安全的会话.
+        // 则不检查session safeExpires是否安全.
+        return (true, !safeExisting);
     }
 }

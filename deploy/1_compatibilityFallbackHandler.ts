@@ -12,7 +12,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         autoMine: true,
         log: true,
         deterministicDeployment: true,
-    })
+    });
 };
 export default func;
 func.id = "deploy_compatibilityFallbackHandler";
