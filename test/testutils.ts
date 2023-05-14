@@ -341,10 +341,13 @@ export async function deployFactory(
   provider: ethers.providers.JsonRpcProvider,
   initSingleton: string
 ): Promise<Factory> {
-  return deployContract(provider.getSigner(), Factory__factory, [
+  const c = await deployContract(provider.getSigner(), Factory__factory, [
     provider.getSigner().getAddress(),
-    initSingleton,
   ]);
+
+  await c.addAllowSingleton(initSingleton)
+
+  return c;
 }
 
 export async function deployMockUserOperationValidator(provider: ethers.providers.JsonRpcProvider): Promise<MockUserOperationValidator> {

@@ -14,11 +14,10 @@ contract Factory is Ownable {
     event AccountCreation(address indexed account, bytes32 slat);
 
     // Prevent ddos attacks
-    mapping (address => bool) public allowSingleton;
+    mapping(address => bool) public allowSingleton;
 
-    constructor(address _owner, address initSingleton) {
+    constructor(address _owner) {
         _transferOwnership(_owner);
-        internalAddAllowSingleton(initSingleton);
     }
 
     function isContract(address _addr) private view returns (bool) {
@@ -54,7 +53,9 @@ contract Factory is Ownable {
             )
         }
         require(address(proxy) != address(0), "Create2 call failed");
-        (bool successSetup, ) = proxy.call(abi.encodeWithSignature("setImpl(address)", _singleton));
+        (bool successSetup, ) = proxy.call(
+            abi.encodeWithSignature("setImpl(address)", _singleton)
+        );
         require(successSetup, "set proxy failed");
         (bool success, ) = proxy.call(stupCode);
         require(success, "init wallet failed");

@@ -15,8 +15,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         log: true,
         args: [
             deployer,
-
-            sodium.address,
         ],
         deterministicDeployment: true,
     });

@@ -1,6 +1,6 @@
 {
   "name": "@0xsodium/wallet-contracts",
-  "version": "0.0.6-beta",
+  "version": "0.0.7-beta",
   "description": "Sodium Smart Wallet contracts",
   "license": "MIT",
   "main": "gen/adapter/index.js",
