@@ -118,11 +118,12 @@ describe('SodiumWithRecover', function () {
 
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
 
-    await expect(entryPoint.handleOps([
+    const tx = entryPoint.handleOps([
       sampleOp,
     ], walletAddress, {
       gasLimit: 2e7
-    })).to.be.emit(entryPoint, "AccountDeployed");
+    })
+    await expect(tx).to.be.emit(entryPoint, "AccountDeployed");
 
     const sampleOp2 = await fillAndSign({
       sender: walletAddress,
@@ -137,6 +138,35 @@ describe('SodiumWithRecover', function () {
       .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
         return decodeRevertReason(result) == "Error(SMR01)";
       });
+
+
+    // 防止MPC交叉签名钱包
+    const recover2 = {
+      safeSessionKey: walletSafeOwner.address,
+      recoverNonce: BigNumber.from(1),
+      recoverExpires: now.add(60 * 60 * 24 * 365),
+    };
+    const sodiumNetworkAuthProof2 = await signSodiumAuthRecover(sodiumAuthTssWeighted, recover2, walletSafeOwner.address);
+    // console.debug("sodiumNetworkAuthProof", sodiumNetworkAuthProof);
+    const callData2 = Sodium__factory.createInterface().encodeFunctionData("executeWithSodiumAuthRecover", [
+      recover2,
+      sodiumNetworkAuthProof2,
+      [],
+    ]);
+
+    const sampleOp3 = await fillAndSign({
+      sender: walletAddress,
+      callData: callData2,
+      callGasLimit: 1e7,
+      // paymasterAndData: deployPaymaster.address
+    }, walletSafeOwner, entryPoint);
+
+    await expect(entryPoint.callStatic.simulateHandleOp(sampleOp3, walletAddress, callData2))
+    .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
+    .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
+      // error MalformedSigners();
+      return result == "0xc6fb5393";
+    });
 
 
     // 对于safe环境应该都能执行
