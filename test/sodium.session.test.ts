@@ -117,7 +117,7 @@ describe('SodiumWithSession', function () {
       const cfh = CompatibilityFallbackHandler__factory.connect(walletAddress, provider);
       const signMessage = keccak256("0xabcd");
       const signHash = await cfh.getMessageHash(signMessage);
-      const signed = joinSignature(walletSessionOwner._signingKey().signDigest(signHash));
+      const signed = walletSessionOwner.signMessage(ethers.utils.arrayify(signHash));
       const result = await cfh['isValidSignature(bytes32,bytes)'](signMessage, signed);
       expect(result).to.equal("0x1626ba7e");
     });

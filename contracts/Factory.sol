@@ -16,8 +16,8 @@ contract Factory is Ownable {
     // Prevent ddos attacks
     mapping(address => bool) public allowSingleton;
 
-    constructor(address _owner) {
-        _transferOwnership(_owner);
+    constructor() {
+        _transferOwnership(tx.origin);
     }
 
     function isContract(address _addr) private view returns (bool) {

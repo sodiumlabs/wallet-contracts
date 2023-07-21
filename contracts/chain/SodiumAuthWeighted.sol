@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-import { ISodiumAuthWeighted } from './ISodiumAuthWeighted.sol';
-import { ECDSA } from '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
-
+import {ISodiumAuthWeighted} from "./ISodiumAuthWeighted.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
@@ -14,14 +13,8 @@ contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
     // solhint-disable-next-line var-name-mixedcase
     uint256 internal constant OLD_KEY_RETENTION = 16;
 
-    constructor(bytes[] memory recentOperators, address _owner) {
-        uint256 length = recentOperators.length;
-
-        for (uint256 i; i < length; ++i) {
-            _transferOperatorship(recentOperators[i]);
-        }
-
-        _transferOwnership(_owner);
+    constructor() {
+        _transferOwnership(tx.origin);
     }
 
     /**************************\
@@ -30,19 +23,33 @@ contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
 
     /// @dev This function takes messageHash and proof data and reverts if proof is invalid
     /// @return True if provided operators are the current ones
-    function verifyProof(bytes32 messageHash, bytes calldata proof) external view returns (bool) {
-        (address[] memory operators, uint256[] memory weights, uint256 threshold, bytes[] memory signatures) = abi.decode(
-            proof,
-            (address[], uint256[], uint256, bytes[])
-        );
+    function verifyProof(
+        bytes32 messageHash,
+        bytes calldata proof
+    ) external view returns (bool) {
+        (
+            address[] memory operators,
+            uint256[] memory weights,
+            uint256 threshold,
+            bytes[] memory signatures
+        ) = abi.decode(proof, (address[], uint256[], uint256, bytes[]));
 
-        bytes32 operatorsHash = keccak256(abi.encode(operators, weights, threshold));
+        bytes32 operatorsHash = keccak256(
+            abi.encode(operators, weights, threshold)
+        );
         uint256 operatorsEpoch = epochForHash[operatorsHash];
         uint256 epoch = currentEpoch;
 
-        if (operatorsEpoch == 0 || epoch - operatorsEpoch >= OLD_KEY_RETENTION) revert InvalidOperators();
+        if (operatorsEpoch == 0 || epoch - operatorsEpoch >= OLD_KEY_RETENTION)
+            revert InvalidOperators();
 
-        _validateSignatures(messageHash, operators, weights, threshold, signatures);
+        _validateSignatures(
+            messageHash,
+            operators,
+            weights,
+            threshold,
+            signatures
+        );
 
         return operatorsEpoch == epoch;
     }
@@ -58,15 +65,19 @@ contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
     |* Internal Functionality *|
     \**************************/
     function _transferOperatorship(bytes memory params) internal {
-        (address[] memory newOperators, uint256[] memory newWeights, uint256 newThreshold) = abi.decode(
-            params,
-            (address[], uint256[], uint256)
-        );
+        (
+            address[] memory newOperators,
+            uint256[] memory newWeights,
+            uint256 newThreshold
+        ) = abi.decode(params, (address[], uint256[], uint256));
         uint256 operatorsLength = newOperators.length;
         uint256 weightsLength = newWeights.length;
 
         // operators must be sorted binary or alphabetically in lower case
-        if (operatorsLength == 0 || !_isSortedAscAndContainsNoDuplicate(newOperators)) revert InvalidOperators();
+        if (
+            operatorsLength == 0 ||
+            !_isSortedAscAndContainsNoDuplicate(newOperators)
+        ) revert InvalidOperators();
 
         if (weightsLength != operatorsLength) revert InvalidWeights();
 
@@ -74,7 +85,8 @@ contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
         for (uint256 i; i < weightsLength; ++i) {
             totalWeight = totalWeight + newWeights[i];
         }
-        if (newThreshold == 0 || totalWeight < newThreshold) revert InvalidThreshold();
+        if (newThreshold == 0 || totalWeight < newThreshold)
+            revert InvalidThreshold();
 
         bytes32 newOperatorsHash = keccak256(params);
 
@@ -104,7 +116,12 @@ contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
         for (uint256 i; i < signaturesLength; ++i) {
             address signer = ECDSA.recover(messageHash, signatures[i]);
             // looping through remaining operators to find a match
-            for (; operatorIndex < operatorsLength && signer != operators[operatorIndex]; ++operatorIndex) {}
+            for (
+                ;
+                operatorIndex < operatorsLength &&
+                    signer != operators[operatorIndex];
+                ++operatorIndex
+            ) {}
             // checking if we are out of operators
             if (operatorIndex == operatorsLength) {
                 revert MalformedSigners();
@@ -120,7 +137,9 @@ contract SodiumAuthWeighted is Ownable, ISodiumAuthWeighted {
         revert LowSignaturesWeight();
     }
 
-    function _isSortedAscAndContainsNoDuplicate(address[] memory accounts) internal pure returns (bool) {
+    function _isSortedAscAndContainsNoDuplicate(
+        address[] memory accounts
+    ) internal pure returns (bool) {
         uint256 accountsLength = accounts.length;
         address prevAccount = accounts[0];
 

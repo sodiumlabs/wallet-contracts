@@ -34,12 +34,9 @@ contract CompatibilityFallbackHandler is
     ) public view override returns (bytes4) {
         Sodium so = Sodium(payable(msg.sender));
         bytes32 messageHash = getMessageHashForSodium(so, _data);
-        (bool isSessionKey, bool isSafe) = so.isSessionOwner(messageHash.recover(_signature));
-        require(
-            isSessionKey && isSafe,
-            "CFH01"
-        );
-        return EIP1271_MAGIC_VALUE;
+        bytes32 ethHash = messageHash.toEthSignedMessageHash();
+        (bool isSessionKey, bool isSafe) = so.isSessionOwner(ethHash.recover(_signature));
+        return  isSessionKey && isSafe ? EIP1271_MAGIC_VALUE : bytes4(0);
     }
 
     /// @dev Returns hash of a message that can be signed by owners.

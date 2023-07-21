@@ -19,6 +19,7 @@ import {
   StableCoinOracle__factory,
   TestModule,
   TestModule__factory,
+  StableCoinPaymaster,
 } from '../gen/typechain';
 import {
   createWalletOwner,
@@ -38,18 +39,17 @@ import {
   deployContract,
   callDataCost,
   deployVerifyingPaymaster,
-  isDeployed,
   deployERC20Paymaster,
-  AddressZero
+  AddressZero,
+  rethrow
 } from './testutils';
 import { fillAndSign, fillUserOp, getUserOpHash, signUserOp } from './UserOp';
 import '@nomicfoundation/hardhat-chai-matchers';
 import { ethers } from "hardhat";
-import { keccak256, parseEther, parseUnits } from 'ethers/lib/utils';
+import { hexlify, keccak256, parseEther, parseUnits, toUtf8Bytes } from 'ethers/lib/utils';
 import { joinSignature } from 'ethers/lib/utils';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { UserOperation } from './UserOperation';
-import { zeroAddress } from 'ethereumjs-util';
 
 describe('SodiumWithRecover', function () {
   let entryPoint: EntryPoint
@@ -162,11 +162,11 @@ describe('SodiumWithRecover', function () {
     }, walletSafeOwner, entryPoint);
 
     await expect(entryPoint.callStatic.simulateHandleOp(sampleOp3, walletAddress, callData2))
-    .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
-    .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
-      // error MalformedSigners();
-      return result == "0xc6fb5393";
-    });
+      .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
+      .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
+        // error MalformedSigners();
+        return result == "0xc6fb5393";
+      });
 
 
     // 对于safe环境应该都能执行
@@ -179,7 +179,7 @@ describe('SodiumWithRecover', function () {
       const cfh = CompatibilityFallbackHandler__factory.connect(walletAddress, provider);
       const signMessage = keccak256("0xabcd");
       const signHash = await cfh.getMessageHash(signMessage);
-      const signed = joinSignature(walletSafeOwner._signingKey().signDigest(signHash));
+      const signed = walletSafeOwner.signMessage(ethers.utils.arrayify(signHash));
       const result = await cfh['isValidSignature(bytes32,bytes)'](signMessage, signed);
       expect(result).to.equal("0x1626ba7e");
     });
@@ -376,7 +376,7 @@ describe('SodiumWithRecover', function () {
     let offchainPaymasterSigner: Wallet;
     let paymaster: Wallet;
     let verifyingPaymaster: VerifyingSingletonPaymaster;
-    let erc20Paymaster: ERC20Paymaster;
+    let erc20Paymaster: StableCoinPaymaster;
     let usdcToken: TestERC20Token;
     let usdcOracle: StableCoinOracle;
     const payTokenDecimals = 6;
@@ -398,12 +398,12 @@ describe('SodiumWithRecover', function () {
       ])
 
       // init usdc gas cost
-      await expect(usdcOracle.updateLatestCost("2000"))
-        .to.be.emit(usdcOracle, "UpdateLatestCost")
-        .withArgs(parseUnits("2000", payTokenDecimals));
+      await expect(erc20Paymaster.updateLatestCost("2000"))
+        .to.be.emit(erc20Paymaster, "UpdateLatestCost")
+        .withArgs(parseUnits("2000", 18));
 
       // init erc20 paymaster
-      await expect(erc20Paymaster.addToken(usdcToken.address, usdcOracle.address))
+      await expect(erc20Paymaster.addToken(usdcToken.address))
         .to.not.reverted;
 
       // mint usdc to wallet
@@ -516,12 +516,22 @@ describe('SodiumWithRecover', function () {
       }, entryPoint);
 
       op = await getUserOpWithERC20PaymasterData(
-        erc20Paymaster,
+        erc20Paymaster.address,
         op,
         usdcToken.address,
         walletSafeOwner,
         entryPoint
       );
+
+      console.log("verificationGasLimit", op.verificationGasLimit.toString())
+      console.log("pre", op.preVerificationGas.toString())
+      console.log("paymasterAndData", op.paymasterAndData);
+
+      console.log("usdc", usdcToken.address);
+      console.log("erc20Paymaster", erc20Paymaster.address);
+      console.log("verifyingPaymaster", verifyingPaymaster.address);
+      console.log("signer", await provider.getSigner().getAddress());
+      console.log("wallet", walletAddress);
 
       expect(
         await testCount.callStatic.counters(walletAddress)
@@ -534,6 +544,17 @@ describe('SodiumWithRecover', function () {
           return true;
         }, anyValue, anyValue, anyValue);
 
+      const simulateHandleOp = { ...op };
+      simulateHandleOp.signature = "0x";
+      simulateHandleOp.verificationGasLimit = 50851;
+
+      console.debug("simulateHandleOp", simulateHandleOp);
+
+      await entryPoint.callStatic.simulateHandleOp(simulateHandleOp, ethers.constants.AddressZero, "0x").catch(rethrow());
+      // await expect(entryPoint.simulateHandleOp(op, ethers.constants.AddressZero, "0x"))
+      //   .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
+      //   .withArgs(anyValue, anyValue, anyValue, anyValue, anyValue, anyValue);
+
       await expect(entryPoint.handleOps([
         op,
       ], provider.getSigner().getAddress(), {
@@ -545,7 +566,7 @@ describe('SodiumWithRecover', function () {
         .withArgs(
           anyValue,
           anyValue,
-          anyValue,
+          erc20Paymaster.address,
           anyValue,
           true,
           anyValue,
@@ -598,7 +619,7 @@ async function getUserOpWithVerifyingPaymasterData(
 }
 
 async function getUserOpWithERC20PaymasterData(
-  paymaster: ERC20Paymaster,
+  paymasterAddress: string,
   userOp: UserOperation,
   payTokenAddress: string,
   walletOwner: Wallet,
@@ -609,7 +630,7 @@ async function getUserOpWithERC20PaymasterData(
       // eslint-disable-next-line node/no-unsupported-features/es-syntax
       ...userOp,
       paymasterAndData: ethers.utils.hexConcat([
-        paymaster.address,
+        paymasterAddress,
         "0x095ea7b3",
         payTokenAddress
       ]),

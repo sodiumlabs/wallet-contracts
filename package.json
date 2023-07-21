@@ -1,6 +1,6 @@
 {
   "name": "@0xsodium/wallet-contracts",
-  "version": "0.0.7-beta",
+  "version": "0.0.8-beta",
   "description": "Sodium Smart Wallet contracts",
   "license": "MIT",
   "main": "gen/adapter/index.js",
@@ -25,6 +25,7 @@
     "ganache": "7.5.0"
   },
   "devDependencies": {
+    "@chainlink/contracts": "^0.6.1",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
     "@gnosis.pm/safe-singleton-factory": "^1.0.11",
@@ -46,7 +47,7 @@
     "ethers": "^5.7.2",
     "hardhat": "^2.12.2",
     "hardhat-circom": "^3.3.2",
-    "hardhat-deploy": "^0.11.22",
+    "hardhat-deploy": "^0.11.31",
     "hardhat-gas-reporter": "^1.0.8",
     "hi-base32": "^0.5.1",
     "rimraf": "^3.0.2",

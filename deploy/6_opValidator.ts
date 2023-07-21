@@ -10,7 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployer } = await getNamedAccounts();
 
     await deploy("SodiumUserOperationValidator", {
-        deterministicDeployment: keccak256(toUtf8Bytes("SodiumUserOperationValidator")),
+        deterministicDeployment: keccak256(toUtf8Bytes("SodiumUserOperationValidator1")),
         proxy: {
             proxyContract: "ERC1967Proxy",
             proxyArgs: [
@@ -20,7 +20,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             execute: {
                 methodName: "initialize",
                 args: [
-                    deployer
                 ]
             }
         },

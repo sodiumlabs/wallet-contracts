@@ -1,9 +1,5 @@
 export function is4337DeployerNetwork(chainId?: number): boolean {
     const undeployNetworks = [
-
-        // hardhat local network
-        31337,
-
         // sodium test network
         777,
     ];

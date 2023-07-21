@@ -16,8 +16,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         deterministicDeployment: keccak256(toUtf8Bytes("SodiumAuthWeighted")),
         from: deployer,
         args: [
-            [latestOperator.param],
-            deployer
         ],
         autoMine: true,
         log: true
@@ -25,7 +23,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     // check owner
     const d = await deployments.get("SodiumAuthWeighted")
-    const opv = SodiumAuthWeighted__factory.connect(d.address, hre.ethers.provider);
+    const opv = SodiumAuthWeighted__factory.connect(d.address, await hre.ethers.getSigner(deployer));
     const owner = await opv.owner();
     if (owner.toLocaleLowerCase() != deployer.toLocaleLowerCase()) {
         throw new Error("owner x");

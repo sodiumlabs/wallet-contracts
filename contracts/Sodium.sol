@@ -15,7 +15,7 @@ import "./eip4337/interfaces/IEntryPoint.sol";
 import "./common/Enum.sol";
 import "./chain/ISodiumAuth.sol";
 import "./securityengine/IUserOperationValidator.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
@@ -48,6 +48,7 @@ contract Sodium is
 
     bool private initialized;
     address public immutable _entryPoint;
+    bytes32 public salt;
 
     // This constructor ensures that this contract can only be used as a master copy for Proxy contracts
     constructor(IEntryPoint entryPoint_) {
@@ -57,7 +58,8 @@ contract Sodium is
     function setup(
         ISodiumAuth _sodiumAuth,
         address _fallbackHandler,
-        address _opValidator
+        address _opValidator,
+        bytes32 _salt
     ) public {
         require(!initialized, "Already initialized");
         require(_fallbackHandler != address(0), "Required fallback handler");
@@ -65,6 +67,7 @@ contract Sodium is
         internalSetFallbackHandler(_fallbackHandler);
         internalSetSodiumNetworkAuth(_sodiumAuth);
         internalWriteUserOperationValidator(_opValidator);
+        salt = _salt;
     }
 
     function entryPoint() public view override returns (IEntryPoint) {
@@ -85,7 +88,7 @@ contract Sodium is
                 address(bytes20(paymasterAndData[:20]))
             );
 
-            IERC20 payToken = IERC20(address(bytes20(paymasterAndData[24:])));
+            IERC20Metadata payToken = IERC20Metadata(address(bytes20(paymasterAndData[24:])));
 
             (uint256 miniAllowance, uint256 suggestApproveValue) = paymaster
                 .getTokenAllowanceCast(payToken);
@@ -134,7 +137,17 @@ contract Sodium is
     ) internal override returns (uint256 validationData) {
         bytes4 methodId = bytes4(userOp.callData[0:4]);
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
+
+        if (userOp.signature.length == 0) {
+            return 1;
+        }
+
         address signer = ECDSA.recover(ethHash, userOp.signature);
+
+        // use eoa wapper wallet
+        if (keccak256(abi.encodePacked(signer)) == salt) {
+            return 0;
+        }
 
         if (methodId == this.executeWithSodiumAuthRecover.selector) {
             address sessionKey;

@@ -15,6 +15,8 @@ import {
   MockUserOperationValidator,
   MockUserOperationValidator__factory,
   ERC20Paymaster,
+  StableCoinPaymaster,
+  StableCoinPaymaster__factory,
   ERC20Paymaster__factory,
   VerifyingSingletonPaymaster,
   VerifyingSingletonPaymaster__factory
@@ -324,8 +326,6 @@ export async function deploySodiumAuthWeighted(
   }
 
   const sodiumAuth = await deployContract(provider.getSigner(), SodiumAuthWeighted__factory, [
-    params,
-    provider.getSigner().getAddress(),
   ]);
 
   const owner = await sodiumAuth.owner();
@@ -333,6 +333,8 @@ export async function deploySodiumAuthWeighted(
   if (owner !== await provider.getSigner().getAddress()) {
     throw new Error("sodium auth no owner");
   }
+
+  await sodiumAuth.transferOperatorship(params[0]);
 
   return sodiumAuth;
 }
@@ -342,7 +344,6 @@ export async function deployFactory(
   initSingleton: string
 ): Promise<Factory> {
   const c = await deployContract(provider.getSigner(), Factory__factory, [
-    provider.getSigner().getAddress(),
   ]);
 
   await c.addAllowSingleton(initSingleton)
@@ -378,10 +379,12 @@ export async function getWalletInitCode(
   opValidator: string
 ): Promise<string> {
   const userId = sessionOwner;
+  const slat = computeWalletSlat(userId);
   const sodiumSetup = singleton.interface.encodeFunctionData("setup", [
     sodiumAuthWeighted.address,
     fallbackHandler,
-    opValidator
+    opValidator,
+    slat
   ]);
   const deployCode = factory.interface.encodeFunctionData("deployProxy", [
     singleton.address,
@@ -498,13 +501,10 @@ export async function deployERC20Paymaster(
   provider: ethers.providers.JsonRpcProvider,
   entryPoint: EntryPoint,
   owner: Wallet
-): Promise<ERC20Paymaster> {
-  const i = await deployContract(provider.getSigner(), ERC20Paymaster__factory, [
+): Promise<StableCoinPaymaster> {
+  return deployContract(owner, StableCoinPaymaster__factory, [
     entryPoint.address,
-    owner.address
   ]);
-
-  return ERC20Paymaster__factory.connect(i.address, owner);
 }
 
 export async function deployVerifyingPaymaster(

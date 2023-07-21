@@ -5,7 +5,7 @@ import "../chain/ISodiumAuth.sol";
 import "../common/SelfAuthorized.sol";
 import "../securityengine/IUserOperationValidator.sol";
 
-/// 
+///
 contract SecurityManager is SelfAuthorized {
     // NETWORK_AUTH_KEY = keccak256("org.sodium.base.security.network.auth");
     bytes32 private constant NETWORK_AUTH_KEY =
@@ -53,9 +53,7 @@ contract SecurityManager is SelfAuthorized {
     }
 
     bytes32 public constant _RECOVER_TYPEHASH =
-        keccak256(
-            "Recover(address safeSessionKey,uint256 recoverNonce)"
-        );
+        keccak256("Recover(address safeSessionKey,uint256 recoverNonce)");
 
     bytes32 public constant _ADD_SESSION_TYPEHASH =
         keccak256(

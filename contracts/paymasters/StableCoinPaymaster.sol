@@ -5,46 +5,60 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../eip4337/core/BasePaymaster.sol";
 import "../interfaces/IOracle.sol";
 import "../interfaces/IERC20Paymaster.sol";
 
 // Sodium Token paymaster token
-contract ERC20Paymaster is IERC20Paymaster, BasePaymaster {
+contract StableCoinPaymaster is IERC20Paymaster, BasePaymaster {
     using UserOperationLib for UserOperation;
     using SafeERC20 for IERC20Metadata;
 
+    uint128 public constant PRECENT_DENOMINATOR = 10000000000;
+    uint128 public constant COST_OF_POST = 35000;
     // calculated cost of the postOp
-    uint256 public constant COST_OF_POST = 35000;
+
+    // 3%
+    uint256 public fee = 300000000;
     IOracle private constant NULL_ORACLE = IOracle(address(0));
 
-    mapping(IERC20Metadata => IOracle) public oracles;
+    mapping(IERC20Metadata => bool) public isTokenSupported;
+
+    // Cost of last gas purchase
+    uint256 private latestCost;
+
+    event UpdateLatestCost(uint256 newLatestCost);
 
     constructor(IEntryPoint _entryPoint) BasePaymaster(_entryPoint) {
         transferOwnership(tx.origin);
     }
 
+    // Integer cost of buying gas
+    function updateLatestCost(uint256 _cost) external onlyOwner {
+        latestCost = _cost * 10 ** 18;
+        emit UpdateLatestCost(latestCost);
+    }
+
+    function _addToken(address tokenAddress) internal {
+        IERC20Metadata token = IERC20Metadata(tokenAddress);
+        require(!isTokenSupported[token], "Token already set");
+        isTokenSupported[token] = true;
+    }
+
     /**
      * owner of the paymaster should add supported tokens
      */
-    function addToken(
-        IERC20Metadata token,
-        IOracle tokenPriceOracle
-    ) external onlyOwner {
-        require(oracles[token] == NULL_ORACLE, "Token already set");
-        oracles[token] = tokenPriceOracle;
+    function addToken(address token) external onlyOwner {
+        _addToken(token);
     }
 
     /**
      * owner of the paymaster should update supported tokens
      */
-    function updateToken(
-        IERC20Metadata token,
-        IOracle tokenPriceOracle
-    ) external onlyOwner {
-        require(oracles[token] != NULL_ORACLE, "Token already set");
-        oracles[token] = tokenPriceOracle;
+    function disableToken(IERC20Metadata token) external onlyOwner {
+        require(!isTokenSupported[token], "Token already set");
+        isTokenSupported[token] = false;
     }
 
     /**
@@ -52,9 +66,15 @@ contract ERC20Paymaster is IERC20Paymaster, BasePaymaster {
      */
     function getTokenAllowanceCast(
         IERC20Metadata token
-    ) external view returns (uint256 tokenInput, uint256 suggestApproveValue) {
-        require(oracles[token] != NULL_ORACLE, "Token already set");
-        return oracles[token].getTokenAllowanceCast();
+    )
+        external
+        view
+        returns (uint256 miniAllowance, uint256 suggestApproveValue)
+    {
+        require(isTokenSupported[token], "Token not set");
+        uint8 decimals = token.decimals();
+        miniAllowance = 10 * 10 ** decimals;
+        suggestApproveValue = 1000 * 10 ** decimals;
     }
 
     /**
@@ -81,10 +101,16 @@ contract ERC20Paymaster is IERC20Paymaster, BasePaymaster {
     function getTokenValueOfEth(
         IERC20Metadata token,
         uint256 ethBought
-    ) internal view virtual returns (uint256 requiredTokens) {
-        IOracle oracle = oracles[token];
-        require(oracle != NULL_ORACLE, "DepositPaymaster: unsupported token");
-        return oracle.getTokenValueOfNativeToken(ethBought);
+    ) public view virtual returns (uint256 requiredTokens) {
+        require(isTokenSupported[token], "Token not set");
+        uint8 decimals = token.decimals();
+        return
+            Math.mulDiv(
+                ethBought * latestCost,
+                10 ** decimals,
+                10 ** 36,
+                Math.Rounding.Up
+            );
     }
 
     /**
@@ -157,8 +183,16 @@ contract ERC20Paymaster is IERC20Paymaster, BasePaymaster {
                 context,
                 (address, IERC20Metadata, uint256, uint256, uint256)
             );
+
+        uint256 feeGasCost = Math.mulDiv(
+            actualGasCost,
+            fee,
+            PRECENT_DENOMINATOR
+        );
+
         // use same conversion rate as used for validation.
         uint256 actualTokenCost = ((actualGasCost +
+            feeGasCost +
             COST_OF_POST *
             gasPricePostOp) * maxTokenCost) / maxCost;
 

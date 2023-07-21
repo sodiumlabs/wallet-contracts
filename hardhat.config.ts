@@ -24,7 +24,7 @@ const deterministicDeployment = (network: string) => {
     return undefined;
   }
   if (parseInt(network) == 31337) {
-    return undefined;
+    network = "42161";
   }
   if (parseInt(network) == 777) {
     return {
@@ -74,6 +74,19 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 31337,
+      forking: {
+        url: "https://arb-mainnet.g.alchemy.com/v2/HQg8IiIwZTSSqgEHvlN4HCXdVY4P1Tpn",
+      }
+    },
+    lumilocal: {
+      chainId: 31337,
+      ...sharedNetworkConfig,
+      url: "http://127.0.0.1:8545",
+    },
+    lumidev: {
+      chainId: 31337,
+      ...sharedNetworkConfig,
+      url: "https://sodiumnode.melandworld.com/",
     },
     mumbai: {
       ...sharedNetworkConfig,

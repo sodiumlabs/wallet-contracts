@@ -24,10 +24,10 @@ contract SodiumUserOperationValidator is
         _disableInitializers();
     }
 
-    function initialize(address _owner) public initializer {
+    function initialize() public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
-        _transferOwnership(_owner);
+        _transferOwnership(tx.origin);
     }
 
     function getNextUpgrade() external view returns (PendingUpgrade memory) {

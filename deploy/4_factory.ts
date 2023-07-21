@@ -7,14 +7,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const { deployer } = await getNamedAccounts();
 
-    const sodium = await deployments.get("Sodium");
-
     await deploy("Factory", {
         from: deployer,
         autoMine: true,
         log: true,
         args: [
-            deployer,
         ],
         deterministicDeployment: true,
     });
