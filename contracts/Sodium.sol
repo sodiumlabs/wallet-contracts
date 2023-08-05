@@ -16,7 +16,7 @@ import "./common/Enum.sol";
 import "./chain/ISodiumAuth.sol";
 import "./securityengine/IUserOperationValidator.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 struct Transaction {
@@ -39,6 +39,8 @@ contract Sodium is
     ISignatureValidatorConstants
 {
     string public constant VERSION = "0.0.1";
+    bytes32 public constant _DELEGATE_AURH_TYPEHASH =
+        keccak256("Delegate(address trustee,uint64 delegateExpires)");
 
     // keccak256(
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
@@ -48,7 +50,6 @@ contract Sodium is
 
     bool private initialized;
     address public immutable _entryPoint;
-    bytes32 public salt;
 
     // This constructor ensures that this contract can only be used as a master copy for Proxy contracts
     constructor(IEntryPoint entryPoint_) {
@@ -88,7 +89,9 @@ contract Sodium is
                 address(bytes20(paymasterAndData[:20]))
             );
 
-            IERC20Metadata payToken = IERC20Metadata(address(bytes20(paymasterAndData[24:])));
+            IERC20Metadata payToken = IERC20Metadata(
+                address(bytes20(paymasterAndData[24:]))
+            );
 
             (uint256 miniAllowance, uint256 suggestApproveValue) = paymaster
                 .getTokenAllowanceCast(payToken);
@@ -135,18 +138,21 @@ contract Sodium is
         UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal override returns (uint256 validationData) {
+        if (userOp.callData.length < 4 || userOp.signature.length < 22) {
+            return 1;
+        }
         bytes4 methodId = bytes4(userOp.callData[0:4]);
         bytes32 ethHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
-        if (userOp.signature.length == 0) {
+        address signer;
+        bool valid;
+        (valid, signer, ) = checkValidSodiumSignature(
+            ethHash,
+            userOp.signature
+        );
+
+        if (!valid) {
             return 1;
-        }
-
-        address signer = ECDSA.recover(ethHash, userOp.signature);
-
-        // use eoa wapper wallet
-        if (keccak256(abi.encodePacked(signer)) == salt) {
-            return 0;
         }
 
         if (methodId == this.executeWithSodiumAuthRecover.selector) {
@@ -192,7 +198,6 @@ contract Sodium is
 
         if (methodId == this.execute.selector) {
             (bool existing, bool isSafe) = isSessionOwner(signer);
-
             IUserOperationValidator validator = internalReadUserOperationValidator();
             if (!isSafe) {
                 // Use the on-chain security center to verify that the operation is secure.
@@ -330,5 +335,60 @@ contract Sodium is
             keccak256(
                 abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), this)
             );
+    }
+
+    function checkValidSodiumSignature(
+        bytes32 _hash,
+        bytes calldata _signature
+    ) public view returns (bool valid, address signer, address trustee) {
+        bytes1 sigType = bytes1(_signature[:1]);
+        // {0x01}{signer}{signature}
+        if (sigType == 0x01) {
+            bytes memory addressBytes = _signature[1:21];
+            bytes memory signatureBytes = _signature[21:];
+            assembly {
+                signer := mload(add(addressBytes, 20))
+            }
+            valid = SignatureChecker.isValidSignatureNow(
+                signer,
+                _hash,
+                signatureBytes
+            );
+        } else if (sigType == 0x02) {
+            uint64 delegateExpires;
+            bytes memory signature;
+            bytes memory delegateproof;
+            (trustee, signer, delegateExpires, signature, delegateproof) = abi
+                .decode(
+                    _signature[1:],
+                    (address, address, uint64, bytes, bytes)
+                );
+            if (delegateExpires < block.timestamp) {
+                valid = false;
+                return (valid, signer, trustee);
+            }
+            bytes32 dataHash = _hashTypedData(
+                keccak256(
+                    abi.encode(
+                        _DELEGATE_AURH_TYPEHASH,
+                        trustee,
+                        delegateExpires
+                    )
+                )
+            );
+            bool delegateValid = SignatureChecker.isValidSignatureNow(
+                signer,
+                dataHash,
+                delegateproof
+            );
+            bool trusteeValid = SignatureChecker.isValidSignatureNow(
+                trustee,
+                _hash,
+                signature
+            );
+            valid = delegateValid && trusteeValid;
+        } else {
+            valid = false;
+        }
     }
 }

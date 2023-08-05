@@ -19,6 +19,7 @@ contract SessionManager is SelfAuthorized {
 
     // safe session
     Session internal _safeSession;
+    bytes32 public salt;
 
     function internalAddOrUpdateSession(Session memory session) internal {
         require(
@@ -45,15 +46,15 @@ contract SessionManager is SelfAuthorized {
         emit ChangedSafeSession(sessionOwner);
     }
 
-    function addOrUpdateSession(Session memory session) public authorized {
-        internalAddOrUpdateSession(session);
-    }
-
     function isSessionOwner(
         address owner
     ) public view returns (bool existing, bool isSafe) {
         if (owner == address(0)) {
             return (false, false);
+        }
+
+        if (keccak256(abi.encodePacked(owner)) == salt) {
+            return (true, true);
         }
 
         bool safeExisting = _safeSession.owner != address(0);

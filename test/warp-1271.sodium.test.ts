@@ -1,5 +1,5 @@
 import './aa.init'
-import { BigNumber, Wallet } from 'ethers'
+import { BigNumber, Signer, Wallet } from 'ethers'
 import { expect } from 'chai'
 import {
   EntryPoint,
@@ -19,6 +19,7 @@ import {
   TestModule,
   TestModule__factory,
   StableCoinPaymaster,
+  Test1271External__factory
 } from '../gen/typechain';
 import {
   createWalletOwner,
@@ -31,32 +32,31 @@ import {
   getWalletAddress,
   mockSodiumAuthTssWeighted,
   deploySodiumAuthWeighted,
-  signSodiumAuthRecover,
   deployFactory,
-  decodeRevertReason,
   deployMockUserOperationValidator,
   deployContract,
   callDataCost,
   deployVerifyingPaymaster,
   deployERC20Paymaster,
   AddressZero,
-  rethrow
 } from './testutils';
 import { fillAndSign, fillUserOp, getUserOpHash, signUserOp } from './UserOp';
 import '@nomicfoundation/hardhat-chai-matchers';
 import { ethers } from "hardhat";
-import { hexlify, keccak256, parseEther, parseUnits, toUtf8Bytes } from 'ethers/lib/utils';
-import { joinSignature } from 'ethers/lib/utils';
+import { keccak256, parseEther, parseUnits } from 'ethers/lib/utils';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { UserOperation } from './UserOperation';
+import { MockWallet1271 } from './mock1271';
 import { signType1 } from './sodium-signature';
 
-describe('SodiumWithRecover', function () {
+describe('SodiumWithWarp1271', function () {
   let entryPoint: EntryPoint
   const provider = ethers.provider;
 
   // mock mobile driver
-  let walletSafeOwner: Wallet
+  let walletSafeOwner: Signer;
+  let test1271Owner: Wallet
+
 
   // mock browser iframe driver
   let walletInitCode: string;
@@ -72,21 +72,26 @@ describe('SodiumWithRecover', function () {
     sodiumAuthWeighted = await deploySodiumAuthWeighted(provider, [
       sodiumAuthTssWeighted
     ]);
+
+    test1271Owner = createWalletOwner(provider);
+    let test1271 = await deployContract(provider.getSigner(), Test1271External__factory, [
+      test1271Owner.address
+    ]);
+    walletSafeOwner = new MockWallet1271(test1271Owner, test1271);
+
     walletSingleton = await deploySingleton(provider, entryPoint);
     walletFactory = await deployFactory(provider, walletSingleton.address);
-    walletSafeOwner = createWalletOwner(provider);
     fallbackHandler = await deployFallbackHandler(provider);
     opValidator = await deployMockUserOperationValidator(provider);
     walletInitCode = await getWalletInitCode(
       walletFactory,
       sodiumAuthWeighted,
       walletSingleton,
-      // 这里不能使用sessionOwner，防止跟warp的测试用例冲突
-      opValidator.address,
+      await walletSafeOwner.getAddress(),
       fallbackHandler.address,
       opValidator.address
     );
-    walletAddress = await getWalletAddress(walletFactory, opValidator.address);
+    walletAddress = await getWalletAddress(walletFactory, await walletSafeOwner.getAddress());
     await fund(provider, walletAddress);
 
     // sanity: validate helper functions
@@ -94,18 +99,7 @@ describe('SodiumWithRecover', function () {
       return n;
     }).then(n => n.chainId);
 
-    // calldata with mpc
-    const now = BigNumber.from(Math.floor(Date.now() / 1000));
-    const recover = {
-      safeSessionKey: walletSafeOwner.address,
-      recoverNonce: BigNumber.from(0),
-      recoverExpires: now.add(60 * 60 * 24 * 365),
-    };
-    const sodiumNetworkAuthProof = await signSodiumAuthRecover(sodiumAuthTssWeighted, recover, walletAddress);
-    // console.debug("sodiumNetworkAuthProof", sodiumNetworkAuthProof);
-    const callData = Sodium__factory.createInterface().encodeFunctionData("executeWithSodiumAuthRecover", [
-      recover,
-      sodiumNetworkAuthProof,
+    const callData = Sodium__factory.createInterface().encodeFunctionData("execute", [
       [],
     ]);
 
@@ -114,7 +108,6 @@ describe('SodiumWithRecover', function () {
       initCode: walletInitCode,
       callData: callData,
       callGasLimit: 1e7,
-      // paymasterAndData: deployPaymaster.address
     }, walletSafeOwner, entryPoint);
 
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
@@ -125,50 +118,6 @@ describe('SodiumWithRecover', function () {
       gasLimit: 2e7
     })
     await expect(tx).to.be.emit(entryPoint, "AccountDeployed");
-
-    const sampleOp2 = await fillAndSign({
-      sender: walletAddress,
-      callData: callData,
-      callGasLimit: 1e7,
-      // paymasterAndData: deployPaymaster.address
-    }, walletSafeOwner, entryPoint);
-
-    // 防止proof二次利用
-    await expect(entryPoint.callStatic.simulateHandleOp(sampleOp2, walletAddress, callData))
-      .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
-      .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
-        return decodeRevertReason(result) == "Error(SMR01)";
-      });
-
-
-    // 防止MPC交叉签名钱包
-    const recover2 = {
-      safeSessionKey: walletSafeOwner.address,
-      recoverNonce: BigNumber.from(1),
-      recoverExpires: now.add(60 * 60 * 24 * 365),
-    };
-    const sodiumNetworkAuthProof2 = await signSodiumAuthRecover(sodiumAuthTssWeighted, recover2, walletSafeOwner.address);
-    // console.debug("sodiumNetworkAuthProof", sodiumNetworkAuthProof);
-    const callData2 = Sodium__factory.createInterface().encodeFunctionData("executeWithSodiumAuthRecover", [
-      recover2,
-      sodiumNetworkAuthProof2,
-      [],
-    ]);
-
-    const sampleOp3 = await fillAndSign({
-      sender: walletAddress,
-      callData: callData2,
-      callGasLimit: 1e7,
-      // paymasterAndData: deployPaymaster.address
-    }, walletSafeOwner, entryPoint);
-
-    await expect(entryPoint.callStatic.simulateHandleOp(sampleOp3, walletAddress, callData2))
-      .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
-      .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
-        // error MalformedSigners();
-        return result == "0xc6fb5393";
-      });
-
 
     // 对于safe环境应该都能执行
     await expect(opValidator.setValidationData(2))
@@ -219,7 +168,7 @@ describe('SodiumWithRecover', function () {
 
       op.callGasLimit = gasLimit.add(callDataCost(execData)).add(gasLimit);
       const opGasLimit = op.callGasLimit.add(2e7);
-      op = signUserOp(op, walletSafeOwner, entryPoint.address, await provider.getNetwork().then(n => n.chainId))
+      op = await fillAndSign(op, walletSafeOwner, entryPoint)
 
       await expect(entryPoint.handleOps([
         op,
@@ -585,7 +534,7 @@ async function getUserOpWithVerifyingPaymasterData(
   userOp: UserOperation,
   offchainPaymasterSigner: Wallet,
   paymasterId: string,
-  walletOwner: Wallet,
+  walletOwner: Signer,
   entryPoint: EntryPoint
 ) {
   const hash = await paymaster.getHash(userOp, paymasterId);
@@ -612,7 +561,7 @@ async function getUserOpWithERC20PaymasterData(
   paymasterAddress: string,
   userOp: UserOperation,
   payTokenAddress: string,
-  walletOwner: Wallet,
+  walletOwner: Signer,
   entryPoint: EntryPoint
 ) {
   const userOpWithPaymasterData = await fillAndSign(

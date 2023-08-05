@@ -28,16 +28,14 @@ import {
   signSodiumAuthRecover,
 } from './testutils';
 import { SecurityManager } from '../gen/typechain/contracts/base/SecurityManager';
-import { fillAndSign, getUserOpHash } from './UserOp';
+import { fillAndSign, fillAndSignWithDelegateProof, getUserOpHash } from './UserOp';
 import '@nomicfoundation/hardhat-chai-matchers';
-import { anyUint, anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
+import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { ethers } from "hardhat";
 import { keccak256 } from 'ethers/lib/utils';
-import { joinSignature } from 'ethers/lib/utils';
-import { zeroAddress } from 'ethereumjs-util';
-import { signType1 } from './sodium-signature';
+import { DelegateProof, genDelegateProof, signType1, signType2 } from './sodium-signature';
 
-describe('SodiumWithSession', function () {
+describe('SodiumWithDelegateSession', function () {
   let entryPoint: EntryPoint
   const provider = ethers.provider;
   let walletSessionOwner: Wallet
@@ -48,7 +46,11 @@ describe('SodiumWithSession', function () {
   let factory: Factory;
   let opValidator: MockUserOperationValidator;
   const sodiumAuthTssWeighted: SodiumAuthTssWeighted = mockSodiumAuthTssWeighted();
-  let sodiumAuthWeighted: SodiumAuthWeighted
+  let sodiumAuthWeighted: SodiumAuthWeighted;
+
+  let trustee: Wallet;
+  let delegateProof: DelegateProof;
+
   before(async function () {
     [entryPoint,] = await deployEntryPoint(provider);
     sodiumAuthWeighted = await deploySodiumAuthWeighted(provider, [
@@ -57,6 +59,7 @@ describe('SodiumWithSession', function () {
     walletSingleton = await deploySingleton(provider, entryPoint);
     factory = await deployFactory(provider, walletSingleton.address);
     walletSessionOwner = createWalletOwner(provider);
+    trustee = createWalletOwner(provider);
     fallbackHandler = await deployFallbackHandler(provider);
     opValidator = await deployMockUserOperationValidator(provider);
 
@@ -70,8 +73,16 @@ describe('SodiumWithSession', function () {
       fallbackHandler.address,
       opValidator.address
     );
+
     walletAddress = await getWalletAddress(factory, opValidator.address);
     await fund(provider, walletAddress);
+
+    delegateProof = await genDelegateProof(
+      walletAddress,
+      trustee.address,
+      walletSessionOwner,
+      parseInt(`${Date.now() / 1000}`) + 86400,
+    );
 
     // sanity: validate helper functions
     const chainId = await provider.getNetwork().then((n) => {
@@ -92,12 +103,12 @@ describe('SodiumWithSession', function () {
       [],
     ]);
 
-    const sampleOp = await fillAndSign({
+    const sampleOp = await fillAndSignWithDelegateProof({
       sender: walletAddress,
       initCode: walletInitCode,
       callData: callData,
       callGasLimit: 1e7,
-    }, walletSessionOwner, entryPoint);
+    }, trustee, delegateProof, entryPoint);
 
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
 
@@ -109,13 +120,28 @@ describe('SodiumWithSession', function () {
   })
 
   describe('EIP1271', () => {
-    it('sign message', async () => {
+    it('delegate sign message', async () => {
       const cfh = CompatibilityFallbackHandler__factory.connect(walletAddress, provider);
       const signMessage = keccak256("0xabcd");
       const signHash = await cfh.getMessageHash(signMessage);
-      const signed = signType1(walletSessionOwner, ethers.utils.arrayify(signHash));
+      const signed = signType2(trustee, ethers.utils.arrayify(signHash), delegateProof);
       const result = await cfh['isValidSignature(bytes32,bytes)'](signMessage, signed);
       expect(result).to.equal("0x1626ba7e");
+    });
+
+    it('delegate expired sign message ', async () => {
+      const expiredDelegateProof = await genDelegateProof(
+        walletAddress,
+        trustee.address,
+        walletSessionOwner,
+        parseInt(`${Date.now() / 1000}`) - 86400,
+      );
+      const cfh = CompatibilityFallbackHandler__factory.connect(walletAddress, provider);
+      const signMessage = keccak256("0xabcd");
+      const signHash = await cfh.getMessageHash(signMessage);
+      const signed = signType2(trustee, ethers.utils.arrayify(signHash), expiredDelegateProof);
+      const result = await cfh['isValidSignature(bytes32,bytes)'](signMessage, signed);
+      expect(result).to.equal("0x00000000");
     });
   })
 
@@ -147,7 +173,13 @@ describe('SodiumWithSession', function () {
         ]
       ]);
 
-      const sampleOp = await fillAndSign({ sender: walletAddress, callData: execData, callGasLimit: 1e7 }, walletSessionOwner, entryPoint)
+      const sampleOp = await fillAndSignWithDelegateProof(
+        { sender: walletAddress, callData: execData, callGasLimit: 1e7 },
+        trustee,
+        delegateProof,
+        entryPoint
+      );
+
       const tx = await entryPoint.handleOps([
         sampleOp,
       ], walletAddress, {
@@ -175,15 +207,45 @@ describe('SodiumWithSession', function () {
       const callData = Sodium__factory.createInterface().encodeFunctionData("execute", [
         [],
       ]);
-      const sampleOp = await fillAndSign({
+      const sampleOp = await fillAndSignWithDelegateProof({
         sender: walletAddress,
         callData: callData,
         callGasLimit: 1e7,
-      }, walletSessionOwner, entryPoint);
+      },
+        trustee,
+        delegateProof,
+        entryPoint
+      );
       await expect(entryPoint.callStatic.simulateValidation(sampleOp))
         .to.be.revertedWithCustomError(entryPoint, "ValidationResult")
         .withArgs(function (result: any) {
           return result[2] == false;
+        }, anyValue, anyValue, anyValue);
+    });
+
+    it("delegate expire", async () => {
+      const expiredDelegateProof = await genDelegateProof(
+        walletAddress,
+        trustee.address,
+        walletSessionOwner,
+        parseInt(`${Date.now() / 1000}`) - 86400,
+      );
+      const callData = Sodium__factory.createInterface().encodeFunctionData("execute", [
+        [],
+      ]);
+      const sampleOp = await fillAndSignWithDelegateProof({
+        sender: walletAddress,
+        callData: callData,
+        callGasLimit: 1e7,
+      },
+        trustee,
+        expiredDelegateProof,
+        entryPoint
+      );
+      await expect(entryPoint.callStatic.simulateValidation(sampleOp))
+        .to.be.revertedWithCustomError(entryPoint, "ValidationResult")
+        .withArgs(function (result: any) {
+          return result[2] == true;
         }, anyValue, anyValue, anyValue);
     });
 
@@ -197,19 +259,23 @@ describe('SodiumWithSession', function () {
         recoverExpires: now.add(60 * 60 * 24 * 365),
       };
       const sodiumNetworkAuthProof = await signSodiumAuthRecover(sodiumAuthTssWeighted, recover, walletAddress);
-      // console.debug("sodiumNetworkAuthProof", sodiumNetworkAuthProof);
       const callData = Sodium__factory.createInterface().encodeFunctionData("executeWithSodiumAuthRecover", [
         recover,
         sodiumNetworkAuthProof,
         [],
       ]);
+      const safeDelegateProof = await genDelegateProof(
+        walletAddress, trustee.address, walletSafeOwner, parseInt(`${Date.now() / 1000}`) + 86400);
 
-      const sampleOp = await fillAndSign({
+      const sampleOp = await fillAndSignWithDelegateProof({
         sender: walletAddress,
         callData: callData,
         callGasLimit: 1e7,
-        // paymasterAndData: deployPaymaster.address
-      }, walletSafeOwner, entryPoint);
+      },
+        trustee,
+        safeDelegateProof,
+        entryPoint
+      );
 
       // sanity: validate helper functions
       const chainId = await provider.getNetwork().then((n) => {
@@ -232,24 +298,24 @@ describe('SodiumWithSession', function () {
         anyValue,
       );
 
-      const executeSampleOp = await fillAndSign({
+      const executeSampleOp = await fillAndSignWithDelegateProof({
         sender: walletAddress,
         callData: Sodium__factory.createInterface().encodeFunctionData("execute", [
           [],
         ]),
         callGasLimit: 1e7,
-      }, walletSessionOwner, entryPoint);
+      },
+        trustee,
+        delegateProof,
+        entryPoint
+      );
 
       await expect(entryPoint.callStatic.simulateValidation(executeSampleOp))
         .to.be.revertedWithCustomError(entryPoint, "ValidationResult")
         .withArgs(function (result: any) {
-          console.log(result);
           // sig failed
           return result[2] == true;
         }, anyValue, anyValue, anyValue);
-      // .to.be.revertedWithCustomError(entryPoint, "FailedOp")
-      // .withArgs(0, "");
     });
-
   });
 })

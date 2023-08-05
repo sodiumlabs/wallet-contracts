@@ -37,6 +37,23 @@ contract Factory is Ownable {
         internalAddAllowSingleton(_singleton);
     }
 
+    // 2. Compute the address of the contract to be deployed
+    // NOTE: _salt is a random number used to create an address
+    function getAddress(uint _salt) public view returns (address) {
+        bytes memory creationCode = Wallet.creationCode;
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes1(0xff),
+                address(this),
+                _salt,
+                keccak256(creationCode)
+            )
+        );
+
+        // NOTE: cast last 20 bytes of hash to address
+        return address(uint160(uint(hash)));
+    }
+
     function deployProxy(
         address _singleton,
         bytes memory stupCode,

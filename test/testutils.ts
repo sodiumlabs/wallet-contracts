@@ -364,7 +364,7 @@ export function mockSodiumAuthTssWeighted(): SodiumAuthTssWeighted {
 }
 
 function computeWalletSlat(userId: string): string {
-  return id(userId);
+  return ethers.utils.keccak256(userId);
 }
 
 // address singleton = address(bytes20(initCode[0:20]));
@@ -380,6 +380,9 @@ export async function getWalletInitCode(
 ): Promise<string> {
   const userId = sessionOwner;
   const slat = computeWalletSlat(userId);
+
+  console.debug("salt", slat, "userId", userId);
+
   const sodiumSetup = singleton.interface.encodeFunctionData("setup", [
     sodiumAuthWeighted.address,
     fallbackHandler,
@@ -389,7 +392,7 @@ export async function getWalletInitCode(
   const deployCode = factory.interface.encodeFunctionData("deployProxy", [
     singleton.address,
     sodiumSetup,
-    computeWalletSlat(userId)
+    slat,
   ]);
   return `${factory.address}${deployCode.slice(2)}`;
 }

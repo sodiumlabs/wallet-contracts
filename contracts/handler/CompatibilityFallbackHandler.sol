@@ -12,13 +12,10 @@ contract CompatibilityFallbackHandler is
 {
     using ECDSA for bytes32;
     //keccak256(
-    //    "SafeMessage(bytes message)"
+    //    "SodiumMessage(bytes message)"
     //);
-    bytes32 private constant SAFE_MSG_TYPEHASH =
+    bytes32 private constant SODIUM_MSG_TYPEHASH =
         0x60b3cbf8b4a223d68d641b3b6ddf9a298e7f33710cf3d3a9d1146b5a6150fbca;
-    bytes4 internal constant SIMULATE_SELECTOR =
-        bytes4(keccak256("simulate(address,bytes)"));
-    address internal constant SENTINEL_MODULES = address(0x1);
     bytes4 internal constant UPDATED_MAGIC_VALUE = 0x1626ba7e;
 
     /**
@@ -35,8 +32,14 @@ contract CompatibilityFallbackHandler is
         Sodium so = Sodium(payable(msg.sender));
         bytes32 messageHash = getMessageHashForSodium(so, _data);
         bytes32 ethHash = messageHash.toEthSignedMessageHash();
-        (bool isSessionKey, bool isSafe) = so.isSessionOwner(ethHash.recover(_signature));
-        return  isSessionKey && isSafe ? EIP1271_MAGIC_VALUE : bytes4(0);
+        (bool valid, address signer, ) = so.checkValidSodiumSignature(
+            ethHash,
+            _signature
+        );
+        (bool isSessionKey, bool isSafe) = so.isSessionOwner(signer);
+
+        return
+            isSessionKey && isSafe && valid ? EIP1271_MAGIC_VALUE : bytes4(0);
     }
 
     /// @dev Returns hash of a message that can be signed by owners.
@@ -57,7 +60,7 @@ contract CompatibilityFallbackHandler is
         bytes memory message
     ) public view returns (bytes32) {
         bytes32 safeMessageHash = keccak256(
-            abi.encode(SAFE_MSG_TYPEHASH, keccak256(message))
+            abi.encode(SODIUM_MSG_TYPEHASH, keccak256(message))
         );
         return
             keccak256(

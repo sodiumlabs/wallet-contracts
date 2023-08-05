@@ -2,15 +2,18 @@ import {
   arrayify,
   defaultAbiCoder,
   hexDataSlice,
-  keccak256
+  keccak256,
+  concat,
+  hexlify
 } from 'ethers/lib/utils'
 import { BigNumber, Contract, Signer, Wallet } from 'ethers'
 import { AddressZero, callDataCost, rethrow } from './testutils'
-import { ecsign, toRpcSig, keccak256 as keccak256_buffer } from 'ethereumjs-util'
+import { ecsign, toRpcSig, keccak256 as keccak256_buffer, toAscii } from 'ethereumjs-util'
 import {
   EntryPoint
 } from '../gen/typechain'
 import { UserOperation } from './UserOperation'
+import { DelegateProof, signType1, signType2 } from './sodium-signature'
 
 export function packUserOp(op: UserOperation, forSignature = true): string {
   if (forSignature) {
@@ -91,10 +94,16 @@ export function signUserOp(op: UserOperation, signer: Wallet, entryPoint: string
   const sig = ecsign(keccak256_buffer(msg1), Buffer.from(arrayify(signer.privateKey)))
   // that's equivalent of:  await signer.signMessage(message);
   // (but without "async"
-  const signedMessage1 = toRpcSig(sig.v, sig.r, sig.s)
+  const signedMessage1 = toRpcSig(sig.v, sig.r, sig.s);
+  const s2 = concat([
+    "0x01",
+    signer.address,
+    signedMessage1
+  ]);
+
   return {
     ...op,
-    signature: signedMessage1
+    signature: s2
   }
 }
 
@@ -190,8 +199,31 @@ export async function fillAndSign(op: Partial<UserOperation>, signer: Wallet | S
   const chainId = await provider!.getNetwork().then(net => net.chainId)
   const message = arrayify(getUserOpHash(op2, entryPoint!.address, chainId))
 
+  const signature = await signType1(signer, message);
+
   return {
     ...op2,
-    signature: await signer.signMessage(message)
+    signature: signature
+  }
+}
+
+export async function fillAndSignWithDelegateProof(
+  op: Partial<UserOperation>,
+  signer: Wallet | Signer,
+  delegateProof: DelegateProof,
+  entryPoint?: EntryPoint,
+  getNonceFunction = 'getNonce'
+): Promise<UserOperation> {
+  const provider = entryPoint!.provider
+  const op2 = await fillUserOp(op, entryPoint, getNonceFunction)
+
+  const chainId = await provider!.getNetwork().then(net => net.chainId)
+  const message = arrayify(getUserOpHash(op2, entryPoint!.address, chainId))
+
+  const signature = await signType2(signer, message, delegateProof);
+
+  return {
+    ...op2,
+    signature: signature
   }
 }

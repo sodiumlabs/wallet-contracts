@@ -17,7 +17,7 @@ contract SecurityManager is SelfAuthorized {
     // keccak256(
     //     "EIP712Domain(address verifyingContract)"
     // );
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
+    bytes32 private constant SECURITY_DOMAIN_SEPARATOR_TYPEHASH =
         0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
 
     // RECOVER_NONCE_KEY = keccak256("org.sodium.base.security.recover_nonce");
@@ -158,7 +158,7 @@ contract SecurityManager is SelfAuthorized {
 
     /// EIP712
     function _getDomainSeparator() internal view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, address(this)));
+        return keccak256(abi.encode(SECURITY_DOMAIN_SEPARATOR_TYPEHASH, address(this)));
     }
 
     /// @notice Creates an EIP-712 typed data hash

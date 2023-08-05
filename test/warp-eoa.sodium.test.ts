@@ -31,27 +31,23 @@ import {
   getWalletAddress,
   mockSodiumAuthTssWeighted,
   deploySodiumAuthWeighted,
-  signSodiumAuthRecover,
   deployFactory,
-  decodeRevertReason,
   deployMockUserOperationValidator,
   deployContract,
   callDataCost,
   deployVerifyingPaymaster,
   deployERC20Paymaster,
   AddressZero,
-  rethrow
 } from './testutils';
 import { fillAndSign, fillUserOp, getUserOpHash, signUserOp } from './UserOp';
 import '@nomicfoundation/hardhat-chai-matchers';
 import { ethers } from "hardhat";
-import { hexlify, keccak256, parseEther, parseUnits, toUtf8Bytes } from 'ethers/lib/utils';
-import { joinSignature } from 'ethers/lib/utils';
+import { keccak256, parseEther, parseUnits } from 'ethers/lib/utils';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { UserOperation } from './UserOperation';
 import { signType1 } from './sodium-signature';
 
-describe('SodiumWithRecover', function () {
+describe('SodiumWithWarpEOA', function () {
   let entryPoint: EntryPoint
   const provider = ethers.provider;
 
@@ -75,18 +71,18 @@ describe('SodiumWithRecover', function () {
     walletSingleton = await deploySingleton(provider, entryPoint);
     walletFactory = await deployFactory(provider, walletSingleton.address);
     walletSafeOwner = createWalletOwner(provider);
+
     fallbackHandler = await deployFallbackHandler(provider);
     opValidator = await deployMockUserOperationValidator(provider);
     walletInitCode = await getWalletInitCode(
       walletFactory,
       sodiumAuthWeighted,
       walletSingleton,
-      // 这里不能使用sessionOwner，防止跟warp的测试用例冲突
-      opValidator.address,
+      walletSafeOwner.address,
       fallbackHandler.address,
       opValidator.address
     );
-    walletAddress = await getWalletAddress(walletFactory, opValidator.address);
+    walletAddress = await getWalletAddress(walletFactory, walletSafeOwner.address);
     await fund(provider, walletAddress);
 
     // sanity: validate helper functions
@@ -94,18 +90,7 @@ describe('SodiumWithRecover', function () {
       return n;
     }).then(n => n.chainId);
 
-    // calldata with mpc
-    const now = BigNumber.from(Math.floor(Date.now() / 1000));
-    const recover = {
-      safeSessionKey: walletSafeOwner.address,
-      recoverNonce: BigNumber.from(0),
-      recoverExpires: now.add(60 * 60 * 24 * 365),
-    };
-    const sodiumNetworkAuthProof = await signSodiumAuthRecover(sodiumAuthTssWeighted, recover, walletAddress);
-    // console.debug("sodiumNetworkAuthProof", sodiumNetworkAuthProof);
-    const callData = Sodium__factory.createInterface().encodeFunctionData("executeWithSodiumAuthRecover", [
-      recover,
-      sodiumNetworkAuthProof,
+    const callData = Sodium__factory.createInterface().encodeFunctionData("execute", [
       [],
     ]);
 
@@ -114,7 +99,6 @@ describe('SodiumWithRecover', function () {
       initCode: walletInitCode,
       callData: callData,
       callGasLimit: 1e7,
-      // paymasterAndData: deployPaymaster.address
     }, walletSafeOwner, entryPoint);
 
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
@@ -125,50 +109,6 @@ describe('SodiumWithRecover', function () {
       gasLimit: 2e7
     })
     await expect(tx).to.be.emit(entryPoint, "AccountDeployed");
-
-    const sampleOp2 = await fillAndSign({
-      sender: walletAddress,
-      callData: callData,
-      callGasLimit: 1e7,
-      // paymasterAndData: deployPaymaster.address
-    }, walletSafeOwner, entryPoint);
-
-    // 防止proof二次利用
-    await expect(entryPoint.callStatic.simulateHandleOp(sampleOp2, walletAddress, callData))
-      .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
-      .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
-        return decodeRevertReason(result) == "Error(SMR01)";
-      });
-
-
-    // 防止MPC交叉签名钱包
-    const recover2 = {
-      safeSessionKey: walletSafeOwner.address,
-      recoverNonce: BigNumber.from(1),
-      recoverExpires: now.add(60 * 60 * 24 * 365),
-    };
-    const sodiumNetworkAuthProof2 = await signSodiumAuthRecover(sodiumAuthTssWeighted, recover2, walletSafeOwner.address);
-    // console.debug("sodiumNetworkAuthProof", sodiumNetworkAuthProof);
-    const callData2 = Sodium__factory.createInterface().encodeFunctionData("executeWithSodiumAuthRecover", [
-      recover2,
-      sodiumNetworkAuthProof2,
-      [],
-    ]);
-
-    const sampleOp3 = await fillAndSign({
-      sender: walletAddress,
-      callData: callData2,
-      callGasLimit: 1e7,
-      // paymasterAndData: deployPaymaster.address
-    }, walletSafeOwner, entryPoint);
-
-    await expect(entryPoint.callStatic.simulateHandleOp(sampleOp3, walletAddress, callData2))
-      .to.be.revertedWithCustomError(entryPoint, "ExecutionResult")
-      .withArgs(anyValue, anyValue, anyValue, anyValue, false, function (result: any) {
-        // error MalformedSigners();
-        return result == "0xc6fb5393";
-      });
-
 
     // 对于safe环境应该都能执行
     await expect(opValidator.setValidationData(2))
