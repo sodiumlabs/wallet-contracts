@@ -37,7 +37,6 @@ contract CompatibilityFallbackHandler is
             _signature
         );
         (bool isSessionKey, bool isSafe) = so.isSessionOwner(signer);
-
         return
             isSessionKey && isSafe && valid ? EIP1271_MAGIC_VALUE : bytes4(0);
     }

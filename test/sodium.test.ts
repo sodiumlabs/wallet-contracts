@@ -117,6 +117,30 @@ describe('SodiumWithRecover', function () {
       // paymasterAndData: deployPaymaster.address
     }, walletSafeOwner, entryPoint);
 
+
+    // test undeploy wallet signature
+    const signMessage = keccak256("0xabcd");
+    const getSignHash = CompatibilityFallbackHandler__factory.createInterface().encodeFunctionData("getMessageHash", [
+      signMessage
+    ]);
+    const signHash = await entryPoint.callStatic.simulateHandleOp(sampleOp, walletAddress, getSignHash).catch(error => {
+      return error.errorArgs[5];
+    });
+
+    // const signHash = await cfh.getMessageHash(signMessage);
+    const signature = await signType1(walletSafeOwner, ethers.utils.arrayify(signHash));
+
+    const getIsValidSignature = CompatibilityFallbackHandler__factory.createInterface().encodeFunctionData("isValidSignature(bytes32,bytes)", [
+      signMessage,
+      signature
+    ]);
+
+    const result = await entryPoint.callStatic.simulateHandleOp(sampleOp, walletAddress, getIsValidSignature).catch(error => {
+      return error.errorArgs[5];
+    });
+
+    expect(ethers.utils.defaultAbiCoder.decode(["bytes4"], result)[0]).to.equal("0x1626ba7e");
+
     expect(getUserOpHash(sampleOp, entryPoint.address, chainId)).to.eql(await entryPoint.getUserOpHash(sampleOp))
 
     const tx = entryPoint.handleOps([
