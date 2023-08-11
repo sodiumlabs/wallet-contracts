@@ -1027,9 +1027,9 @@ __metadata:
   linkType: hard
 
 "@openzeppelin/contracts@npm:^4.8.0":
-  version: 4.8.2
-  resolution: "@openzeppelin/contracts@npm:4.8.2"
-  checksum: 1d362f0b9c880549cb82544e23fb70270fbbbe24a69e10bd5aa07649fd82347686173998ae484defafdc473d04004d519f839e3cd3d3e7733d0895b950622243
+  version: 4.9.3
+  resolution: "@openzeppelin/contracts@npm:4.9.3"
+  checksum: 4932063e733b35fa7669b9fe2053f69b062366c5c208b0c6cfa1ac451712100c78acff98120c3a4b88d94154c802be05d160d71f37e7d74cadbe150964458838
   languageName: node
   linkType: hard
 
