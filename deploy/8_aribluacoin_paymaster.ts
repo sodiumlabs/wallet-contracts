@@ -21,8 +21,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         return;
     }
 
-    await deploy("AribStablePaymaster", {
-        deterministicDeployment: keccak256(toUtf8Bytes("AribStablePaymaster")),
+    await deploy("AribLUAPaymaster", {
+        deterministicDeployment: keccak256(toUtf8Bytes("AribLUAPaymaster")),
         from: deployer,
         args: [
             entryPointAddressOf4337

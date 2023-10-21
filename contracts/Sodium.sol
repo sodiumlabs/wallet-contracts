@@ -354,6 +354,7 @@ contract Sodium is
                 _hash,
                 signatureBytes
             );
+        // {0x02}{trustee}{signer}{delegateExpires}{signature}{delegateproof}
         } else if (sigType == 0x02) {
             uint64 delegateExpires;
             bytes memory signature;

@@ -13,7 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const factory = Factory__factory.connect(factoryDeployment.address, await hre.ethers.getSigner(deployer));
     const isAllowSingleton = await factory.allowSingleton(sodium.address);
     if (!isAllowSingleton) {
-        await factory.addAllowSingleton(sodium.address);
+        await (await factory.addAllowSingleton(sodium.address)).wait();
     }
 };
 export default func;

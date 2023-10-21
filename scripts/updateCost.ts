@@ -2,7 +2,7 @@ import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import hre from "hardhat";
 import { StableCoinPaymaster__factory } from '../gen/typechain';
 
-const paymaster = "0x441746A42c895e5b7e8C1136C7aE8ae3ff957dCc";
+const paymaster = "0x7af2021fE52013A83405d585E62a1dEf661217C4";
 const cost = "2000";
 async function main() {
     const { deployer } = await hre.getNamedAccounts();

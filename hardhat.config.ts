@@ -23,9 +23,6 @@ const deterministicDeployment = (network: string) => {
   if (parseInt(network) == 1337) {
     return undefined;
   }
-  if (parseInt(network) == 31337) {
-    network = "42161";
-  }
   if (parseInt(network) == 777) {
     return {
       factory: "0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7",
@@ -72,12 +69,6 @@ const config: HardhatUserConfig = {
   },
   deterministicDeployment,
   networks: {
-    hardhat: {
-      chainId: 31337,
-      forking: {
-        url: "https://arb-mainnet.g.alchemy.com/v2/HQg8IiIwZTSSqgEHvlN4HCXdVY4P1Tpn",
-      }
-    },
     lumilocal: {
       chainId: 31337,
       ...sharedNetworkConfig,
@@ -86,7 +77,7 @@ const config: HardhatUserConfig = {
     lumidev: {
       chainId: 31337,
       ...sharedNetworkConfig,
-      url: "https://sodiumnode.melandworld.com/",
+      url: "https://lumidevnode.lumiterra.net",
     },
     mumbai: {
       ...sharedNetworkConfig,
@@ -102,6 +93,11 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       chainId: 777,
       url: "http://localhost:26651"
+    },
+    arbitrum: {
+      chainId: 42161,
+      ...sharedNetworkConfig,
+      url: "https://arb-mainnet.g.alchemy.com/v2/LhWLKwBByY8nLuq57UIj6t2OPCSAdwUH",
     },
     sodiumt: {
       ...sharedNetworkConfig,

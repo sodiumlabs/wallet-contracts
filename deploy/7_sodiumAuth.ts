@@ -32,7 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const currentEpoch = opv.currentEpoch();
     const currentHash = await opv.hashForEpoch(currentEpoch);
     if (currentHash.toLocaleLowerCase() != latestOperator.hash.toLocaleLowerCase()) {
-        await opv.transferOperatorship(latestOperator.param);
+        await (await opv.transferOperatorship(latestOperator.param)).wait();
     }
 };
 export default func;
